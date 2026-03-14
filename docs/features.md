@@ -8,8 +8,8 @@ The primary screen users interact with every day.
 
 - **Goal ring** — circular progress indicator showing calories consumed vs. daily goal
 - **Remaining / over budget** label prominently displayed
-- **Macro rings** — three smaller rings for Protein, Carbs, Fat (grams and %)
-- Color-coded feedback: green → on track, amber → near limit, red → over
+- **Macro distribution ring** — a single segmented ring showing the caloric contribution of Protein, Carbs, and Fat as proportional arcs of the total calories consumed (Protein = blue, Carbs = yellow, Fat = orange)
+- Color-coded feedback on the goal ring: green → on track, amber → near limit, red → over
 
 ### 1.2 Meal Timeline
 
@@ -37,7 +37,7 @@ Workflow:
 
 ### 1.4 Manual Entry (Fallback)
 
-- Search food database (USDA FoodData Central API)
+- Search food database (Open Food Facts API — EU-focused, open source, covers European products)
 - Select serving size → auto-fill macros
 - Fully manual form as last resort
 
@@ -69,13 +69,7 @@ Dedicated page at `/progress`.
 - Daily bars broken into Protein / Carbs / Fat contribution
 - Hover/tap tooltip with exact values
 
-### 2.4 Monthly Heatmap
-
-- GitHub-style calendar heatmap
-- Color intensity = % of daily goal hit
-- Quick overview of consistency over a month
-
-### 2.5 Summary Stats Panel
+### 2.4 Summary Stats Panel
 
 - Average daily calories for period
 - Best streak of goal-hitting days
@@ -98,5 +92,4 @@ Full searchable/filterable history at `/log`.
 See [pwa.md](./pwa.md) for detail.
 
 - Installable on mobile home screen
-- Offline-capable (logs cached locally)
 - Push notifications for meal reminders (opt-in)

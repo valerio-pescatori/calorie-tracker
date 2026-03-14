@@ -8,11 +8,11 @@
 | Styling | Tailwind CSS v4 | Utility-first, design tokens, dark mode |
 | UI Components | shadcn/ui | Accessible, unstyled-by-default, copy-owned |
 | Charts | Chart.js + react-chartjs-2 | Straightforward API; D3.js reserved for custom viz |
-| AI | Vercel AI SDK + OpenAI | Streaming text/voice responses, tool calling |
-| Speech | Web Speech API (browser) + Whisper (fallback) | Native voice input, server-side transcription fallback |
+| AI | Vercel AI SDK + OpenRouter | Streaming text/voice responses, tool calling; model-agnostic |
+| Speech | Web Speech API (browser) + Groq Whisper (fallback) | Native voice input, server-side transcription fallback |
 | State | Zustand | Lightweight client-side state for daily log |
 | Persistence | localStorage / IndexedDB (phase 1), Postgres via Drizzle ORM (phase 2) | Offline-first then sync |
-| PWA | next-pwa | Service worker, caching, install prompt |
+| PWA | Next.js built-in (`app/manifest.ts`) + `public/sw.js` | Native manifest file convention, no extra package |
 
 ## Project Structure
 
@@ -47,7 +47,6 @@ calorie-tracker/
 │   │   └── MealConfirmCard.tsx
 │   └── progress/
 │       ├── WeeklyTrendChart.tsx
-│       ├── MonthlyHeatmap.tsx
 │       └── MacroStackedBar.tsx
 ├── lib/
 │   ├── ai.ts                    # AI SDK client setup

@@ -9,9 +9,15 @@ A Progressive Web App (PWA) for intelligent, AI-assisted calorie and macronutrie
 | [architecture.md](./architecture.md) | Tech stack, project structure, and design decisions |
 | [features.md](./features.md) | Full feature specification for all modules |
 | [ai-integration.md](./ai-integration.md) | AI meal-parsing via voice and text input |
-| [data-visualization.md](./data-visualization.md) | Charts and graphs (D3.js / Chart.js) strategy |
-| [pwa.md](./pwa.md) | PWA configuration, offline support, and installability |
+| [data-visualization.md](./data-visualization.md) | Charts and graphs (Chart.js) strategy |
+| [pwa.md](./pwa.md) | PWA configuration and installability |
 | [data-model.md](./data-model.md) | Data schemas for meals, logs, and user profiles |
+
+## Pages
+
+| File | Description |
+|---|---|
+| [pages/dashboard.md](./pages/dashboard.md) | Daily tracker — layout, components, state, and interactions |
 
 ## Quick Start
 
