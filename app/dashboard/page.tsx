@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Settings } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { computeTotals } from '@/lib/nutrition';
 import { CalorieSummaryRing } from '@/components/dashboard/CalorieSummaryRing';
 import { MacroDistributionRing } from '@/components/dashboard/MacroDistributionRing';
 import { MacroBreakdownBar } from '@/components/dashboard/MacroBreakdownBar';
@@ -10,10 +12,13 @@ import { AddMealPanel } from '@/components/dashboard/AddMealPanel';
 import { GoalSettingsSheet } from '@/components/dashboard/GoalSettingsSheet';
 import { Button } from '@/components/ui/button';
 
+const EMPTY_MEALS: [] = [];
+
 export default function DashboardPage() {
   const key = new Date().toISOString().slice(0, 10);
-  const today = useStore((s) => s.logs[key] ?? { date: key, meals: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } });
+  const meals = useStore((s) => s.logs[key]?.meals ?? EMPTY_MEALS);
   const goals = useStore((s) => s.profile.goals);
+  const totals = useMemo(() => computeTotals(meals), [meals]);
 
   const dateLabel = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -39,15 +44,15 @@ export default function DashboardPage() {
       <main className="max-w-2xl mx-auto px-4 pt-5 space-y-5">
         {/* Calorie & Macro rings */}
         <section className="grid grid-cols-2 gap-2 bg-white rounded-2xl p-5 shadow-sm">
-          <CalorieSummaryRing consumed={today.totals.calories} goal={goals.calories} />
-          <MacroDistributionRing totals={today.totals} />
+          <CalorieSummaryRing consumed={totals.calories} goal={goals.calories} />
+          <MacroDistributionRing totals={totals} />
         </section>
 
         {/* Macro progress bars */}
-        <MacroBreakdownBar totals={today.totals} goals={goals} />
+        <MacroBreakdownBar totals={totals} goals={goals} />
 
         {/* Meal list grouped by meal type */}
-        <MealTimeline meals={today.meals} />
+        <MealTimeline meals={meals} />
       </main>
 
       {/* Floating add meal button + sheet */}

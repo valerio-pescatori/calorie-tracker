@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useStore } from '@/lib/store';
 import { calcTDEE } from '@/lib/nutrition';
-import type { UserGoals, ActivityLevel, UserProfile } from '@/types';
+import type { MacroTotals, ActivityLevel, UserProfile } from '@/types';
 
 interface Props {
   children: React.ReactNode;
@@ -33,7 +33,7 @@ export function GoalSettingsSheet({ children }: Props) {
   const updateGoals = useStore((s) => s.updateGoals);
   const updateProfile = useStore((s) => s.updateProfile);
 
-  const [form, setForm] = useState<UserGoals>({ ...goals });
+  const [form, setForm] = useState<MacroTotals>({ ...goals });
   const [tdeeOpen, setTdeeOpen] = useState(false);
   const [tdeeForm, setTdeeForm] = useState({
     weightKg: profile.weightKg ?? 70,
@@ -77,7 +77,7 @@ export function GoalSettingsSheet({ children }: Props) {
               { key: 'protein',  label: 'Protein',  unit: 'g' },
               { key: 'carbs',    label: 'Carbs',    unit: 'g' },
               { key: 'fat',      label: 'Fat',      unit: 'g' },
-            ] as { key: keyof UserGoals; label: string; unit: string }[]
+            ] as { key: keyof MacroTotals; label: string; unit: string }[]
           ).map(({ key, label, unit }) => (
             <div key={key} className="space-y-1.5">
               <label className="text-sm font-medium text-zinc-700">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, Mic, MicOff, Send, PenLine, Search, CheckCircle2, X } from 'lucide-react';
 import {
   Sheet,
@@ -96,7 +96,7 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
             <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
               {form.confidence === 'low' ? '⚠ Low confidence' : 'Medium confidence'}
             </Badge>
-            {form.notes && <p className="text-xs text-amber-700 italic">"{form.notes}"</p>}
+            {form.notes && <p className="text-xs text-amber-700 italic">&ldquo;{form.notes}&rdquo;</p>}
           </div>
         )}
       </div>
@@ -216,7 +216,7 @@ function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) 
 
       {transcript && (
         <div className="w-full rounded-lg bg-zinc-50 border border-zinc-200 p-3 text-sm text-zinc-700 italic">
-          "{transcript}"
+          &ldquo;{transcript}&rdquo;
         </div>
       )}
       {error && <p className="text-xs text-red-500 text-center">{error}</p>}
