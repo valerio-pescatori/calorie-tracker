@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { computeTotals } from '@/lib/nutrition';
@@ -19,6 +19,15 @@ export default function DashboardPage() {
   const meals = useStore((s) => s.logs[key]?.meals ?? EMPTY_MEALS);
   const goals = useStore((s) => s.profile.goals);
   const totals = useMemo(() => computeTotals(meals), [meals]);
+
+  const hydrateForDate = useStore((s) => s.hydrateForDate);
+  const hydrateProfile = useStore((s) => s.hydrateProfile);
+
+  // Hydrate store from server on first render
+  useEffect(() => {
+    hydrateForDate(key);
+    hydrateProfile();
+  }, [key, hydrateForDate, hydrateProfile]);
 
   const dateLabel = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',

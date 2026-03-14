@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { MealEntry, DailyLog, MacroTotals, UserProfile } from "@/types";
 import { computeTotals } from "./nutrition";
 import { todayKey } from "./date";
@@ -8,91 +7,238 @@ function emptyLog(date: string): DailyLog {
   return { date, meals: [] };
 }
 
-// Safe storage that falls back to a noop during SSR
-const safeStorage = createJSONStorage(() => {
-  if (typeof localStorage !== "undefined") return localStorage;
-  return {
-    getItem: () => null,
-    setItem: () => {},
-    removeItem: () => {},
-  } as unknown as Storage;
-});
-
 interface Store {
   /** Daily logs keyed by date (YYYY-MM-DD) */
   logs: Record<string, DailyLog>;
   profile: UserProfile;
+  /** Dates whose meals have already been fetched from the server */
+  hydratedDates: Set<string>;
+  profileHydrated: boolean;
 }
 
 interface Actions {
-  addMeal: (entry: Omit<MealEntry, "id" | "timestamp">) => void;
-  removeMeal: (id: string) => void;
-  updateMeal: (id: string, patch: Partial<Omit<MealEntry, "id">>) => void;
-  updateGoals: (goals: Partial<MacroTotals>) => void;
-  updateProfile: (patch: Partial<Omit<UserProfile, "goals">>) => void;
+  addMeal: (entry: Omit<MealEntry, "id" | "timestamp">, date?: string) => Promise<void>;
+  removeMeal: (id: string, date?: string) => Promise<void>;
+  updateMeal: (id: string, patch: Partial<Omit<MealEntry, "id">>, date?: string) => Promise<void>;
+  updateGoals: (goals: Partial<MacroTotals>) => Promise<void>;
+  updateProfile: (patch: Partial<Omit<UserProfile, "goals">>) => Promise<void>;
+  /** Load meals for a date from the server (no-op if already loaded) */
+  hydrateForDate: (date: string) => Promise<void>;
+  /** Load profile/goals from the server (no-op if already loaded) */
+  hydrateProfile: () => Promise<void>;
 }
 
 export type StoreState = Store & Actions;
 
-export const useStore = create<StoreState>()(
-  persist(
-    (set) => ({
-      logs: {},
+export const useStore = create<StoreState>()((set, get) => ({
+  logs: {},
+  hydratedDates: new Set(),
+  profileHydrated: false,
 
-      addMeal: (entry) => {
-        const key = todayKey();
-        set((state) => {
-          const log = state.logs[key] ?? emptyLog(key);
-          const newMeal: MealEntry = {
-            ...entry,
-            id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
-          };
-          return {
-            logs: { ...state.logs, [key]: { ...log, meals: [...log.meals, newMeal] } },
-          };
-        });
+  profile: {
+    goals: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
+  },
+
+  // ─── Hydration ─────────────────────────────────────────────────────────────
+
+  hydrateForDate: async (date) => {
+    if (get().hydratedDates.has(date)) return;
+
+    const res = await fetch(`/api/meals?date=${date}`);
+    if (!res.ok) return;
+
+    const { meals } = (await res.json()) as { meals: MealEntry[] };
+    set((state) => ({
+      hydratedDates: new Set([...state.hydratedDates, date]),
+      logs: {
+        ...state.logs,
+        [date]: { date, meals },
       },
+    }));
+  },
 
-      removeMeal: (id) => {
-        const key = todayKey();
-        set((state) => {
-          const log = state.logs[key];
-          if (!log) return state;
-          return {
-            logs: { ...state.logs, [key]: { ...log, meals: log.meals.filter((m) => m.id !== id) } },
-          };
-        });
-      },
+  hydrateProfile: async () => {
+    if (get().profileHydrated) return;
 
-      updateMeal: (id, patch) => {
-        const key = todayKey();
-        set((state) => {
-          const log = state.logs[key];
-          if (!log) return state;
-          return {
-            logs: {
-              ...state.logs,
-              [key]: { ...log, meals: log.meals.map((m) => (m.id === id ? { ...m, ...patch } : m)) },
-            },
-          };
-        });
-      },
+    const res = await fetch("/api/profile");
+    if (!res.ok) return;
 
+    const { profile } = await res.json();
+    set({
+      profileHydrated: true,
       profile: {
-        goals: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
+        goals: {
+          calories: profile.calories,
+          protein: profile.protein,
+          carbs: profile.carbs,
+          fat: profile.fat,
+        },
+        weightKg: profile.weightKg ?? undefined,
+        heightCm: profile.heightCm ?? undefined,
+        ageYears: profile.ageYears ?? undefined,
+        sex: profile.sex ?? undefined,
+        activityLevel: profile.activityLevel ?? undefined,
       },
+    });
+  },
 
-      updateGoals: (goals) =>
-        set((state) => ({
-          profile: { ...state.profile, goals: { ...state.profile.goals, ...goals } },
-        })),
+  // ─── Mutations ─────────────────────────────────────────────────────────────
 
-      updateProfile: (patch) => set((state) => ({ profile: { ...state.profile, ...patch } })),
-    }),
-    { name: "calorie-tracker", storage: safeStorage },
-  ),
-);
+  addMeal: async (entry, date) => {
+    const key = date ?? todayKey();
+
+    // Optimistic update
+    const tempId = crypto.randomUUID();
+    const newMeal: MealEntry = {
+      ...entry,
+      id: tempId,
+      timestamp: new Date().toISOString(),
+    };
+    set((state) => {
+      const log = state.logs[key] ?? emptyLog(key);
+      return {
+        logs: { ...state.logs, [key]: { ...log, meals: [...log.meals, newMeal] } },
+      };
+    });
+
+    try {
+      const res = await fetch("/api/meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...entry, date: key }),
+      });
+      if (!res.ok) throw new Error("Failed to save meal");
+
+      const { meal } = (await res.json()) as { meal: MealEntry };
+      // Replace temp entry with the server-assigned id
+      set((state) => {
+        const log = state.logs[key];
+        if (!log) return state;
+        return {
+          logs: {
+            ...state.logs,
+            [key]: {
+              ...log,
+              meals: log.meals.map((m) => (m.id === tempId ? meal : m)),
+            },
+          },
+        };
+      });
+    } catch {
+      // Rollback
+      set((state) => {
+        const log = state.logs[key];
+        if (!log) return state;
+        return {
+          logs: {
+            ...state.logs,
+            [key]: { ...log, meals: log.meals.filter((m) => m.id !== tempId) },
+          },
+        };
+      });
+    }
+  },
+
+  removeMeal: async (id, date) => {
+    const key = date ?? todayKey();
+    const prevLog = get().logs[key];
+
+    // Optimistic remove
+    set((state) => {
+      const log = state.logs[key];
+      if (!log) return state;
+      return {
+        logs: { ...state.logs, [key]: { ...log, meals: log.meals.filter((m) => m.id !== id) } },
+      };
+    });
+
+    try {
+      const res = await fetch(`/api/meals/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete meal");
+    } catch {
+      // Rollback
+      if (prevLog) {
+        set((state) => ({ logs: { ...state.logs, [key]: prevLog } }));
+      }
+    }
+  },
+
+  updateMeal: async (id, patch, date) => {
+    const key = date ?? todayKey();
+    const prevLog = get().logs[key];
+
+    // Optimistic update
+    set((state) => {
+      const log = state.logs[key];
+      if (!log) return state;
+      return {
+        logs: {
+          ...state.logs,
+          [key]: { ...log, meals: log.meals.map((m) => (m.id === id ? { ...m, ...patch } : m)) },
+        },
+      };
+    });
+
+    try {
+      const res = await fetch(`/api/meals/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error("Failed to update meal");
+    } catch {
+      if (prevLog) {
+        set((state) => ({ logs: { ...state.logs, [key]: prevLog } }));
+      }
+    }
+  },
+
+  updateGoals: async (goals) => {
+    const prevProfile = get().profile;
+
+    // Optimistic
+    set((state) => ({
+      profile: { ...state.profile, goals: { ...state.profile.goals, ...goals } },
+    }));
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(goals),
+      });
+      if (!res.ok) throw new Error("Failed to update goals");
+    } catch {
+      set({ profile: prevProfile });
+    }
+  },
+
+  updateProfile: async (patch) => {
+    const prevProfile = get().profile;
+
+    // Optimistic
+    set((state) => ({ profile: { ...state.profile, ...patch } }));
+
+    try {
+      // Map from UserProfile shape to API shape
+      const apiPatch: Record<string, unknown> = {};
+      if (patch.weightKg !== undefined) apiPatch.weightKg = patch.weightKg;
+      if (patch.heightCm !== undefined) apiPatch.heightCm = patch.heightCm;
+      if (patch.ageYears !== undefined) apiPatch.ageYears = patch.ageYears;
+      if (patch.sex !== undefined) apiPatch.sex = patch.sex;
+      if (patch.activityLevel !== undefined) apiPatch.activityLevel = patch.activityLevel;
+
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiPatch),
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+    } catch {
+      set({ profile: prevProfile });
+    }
+  },
+}));
 
 // Selectors — derive totals from meals rather than storing redundant data
 export const selectTodayTotals = (state: StoreState): MacroTotals =>
@@ -100,3 +246,4 @@ export const selectTodayTotals = (state: StoreState): MacroTotals =>
 
 export const selectTotalsForDate = (date: string) => (state: StoreState): MacroTotals =>
   computeTotals(state.logs[date]?.meals ?? []);
+
