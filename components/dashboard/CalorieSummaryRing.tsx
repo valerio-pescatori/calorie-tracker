@@ -27,7 +27,7 @@ export function CalorieSummaryRing({ consumed, goal }: Props) {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = 'bold 26px "Syne", sans-serif';
+        ctx.font = 'bold 26px "Space Grotesk", sans-serif';
         ctx.fillStyle = '#e2e8f0';
         ctx.fillText(String(consumed), cx, cy - 10);
         ctx.font = '12px "Inter", sans-serif';
