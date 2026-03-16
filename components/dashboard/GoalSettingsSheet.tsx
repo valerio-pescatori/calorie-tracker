@@ -80,15 +80,15 @@ export function GoalSettingsSheet({ children }: Props) {
             ] as { key: keyof MacroTotals; label: string; unit: string }[]
           ).map(({ key, label, unit }) => (
             <div key={key} className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700">
-                {label} <span className="text-zinc-400">({unit})</span>
+              <label className="text-sm font-medium text-foreground/80">
+                {label} <span className="text-muted-foreground">({unit})</span>
               </label>
               <input
                 type="number"
                 min={0}
                 value={form[key]}
                 onChange={(e) => setForm((f) => ({ ...f, [key]: Number(e.target.value) }))}
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                className="input-dark"
               />
             </div>
           ))}
@@ -101,16 +101,16 @@ export function GoalSettingsSheet({ children }: Props) {
 
           {/* TDEE Calculator */}
           <button
-            className="w-full text-left text-sm font-semibold text-zinc-700 flex items-center justify-between"
+            className="w-full text-left text-sm font-semibold text-foreground flex items-center justify-between"
             onClick={() => setTdeeOpen((v) => !v)}
           >
             TDEE Calculator
-            <span className="text-zinc-400 text-xs">{tdeeOpen ? '▲ hide' : '▼ show'}</span>
+            <span className="text-muted-foreground text-xs">{tdeeOpen ? '▲ hide' : '▼ show'}</span>
           </button>
 
           {tdeeOpen && (
             <div className="space-y-4 pt-1">
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 Calculates your Total Daily Energy Expenditure using the Mifflin-St Jeor formula and fills in your calorie goal.
               </p>
 
@@ -120,7 +120,7 @@ export function GoalSettingsSheet({ children }: Props) {
                 { key: 'ageYears', label: 'Age' },
               ].map(({ key, label }) => (
                 <div key={key} className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700">{label}</label>
+                  <label className="text-sm font-medium text-foreground/80">{label}</label>
                   <input
                     type="number"
                     min={0}
@@ -128,19 +128,19 @@ export function GoalSettingsSheet({ children }: Props) {
                     onChange={(e) =>
                       setTdeeForm((f) => ({ ...f, [key]: Number(e.target.value) }))
                     }
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    className="input-dark"
                   />
                 </div>
               ))}
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700">Sex</label>
+                <label className="text-sm font-medium text-foreground/80">Sex</label>
                 <select
                   value={tdeeForm.sex}
                   onChange={(e) =>
                     setTdeeForm((f) => ({ ...f, sex: e.target.value as UserProfile['sex'] }))
                   }
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className="input-dark"
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -149,13 +149,13 @@ export function GoalSettingsSheet({ children }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700">Activity level</label>
+                <label className="text-sm font-medium text-foreground/80">Activity level</label>
                 <select
                   value={tdeeForm.activityLevel}
                   onChange={(e) =>
                     setTdeeForm((f) => ({ ...f, activityLevel: e.target.value as ActivityLevel }))
                   }
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className="input-dark"
                 >
                   {ACTIVITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>

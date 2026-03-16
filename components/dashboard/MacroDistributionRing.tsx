@@ -12,7 +12,7 @@ interface Props {
   totals: MacroTotals;
 }
 
-const MACRO_COLORS = ["#3b82f6", "#eab308", "#f97316"];
+const MACRO_COLORS = ["#8b5cf6", "#2dd4bf", "#f59e0b"];
 const MACRO_LABELS = ["Protein", "Carbs", "Fat"];
 
 export function MacroDistributionRing({ totals }: Props) {
@@ -30,8 +30,8 @@ export function MacroDistributionRing({ totals }: Props) {
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px sans-serif";
-        ctx.fillStyle = "#71717a";
+        ctx.font = "bold 13px \"Inter\", sans-serif";
+        ctx.fillStyle = "#94a3b8";
         ctx.fillText("Macros", cx, cy);
         ctx.restore();
       },
@@ -47,8 +47,8 @@ export function MacroDistributionRing({ totals }: Props) {
   if (!mounted) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <p className="text-sm font-medium text-zinc-500">Macros</p>
-        <div className="w-40 h-40 rounded-full bg-zinc-100 animate-pulse" />
+        <p className="text-sm font-medium text-muted-foreground">Macros</p>
+        <div className="w-40 h-40 rounded-full bg-white/10 animate-pulse" />
         <div className="h-4 w-24 bg-zinc-100 rounded animate-pulse" />
       </div>
     );
@@ -56,7 +56,7 @@ export function MacroDistributionRing({ totals }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className="text-sm font-medium text-zinc-500">Macros</p>
+      <p className="text-sm font-medium text-muted-foreground">Macros</p>
       <div className="w-40 h-40">
         <Doughnut
           data={{
@@ -64,7 +64,7 @@ export function MacroDistributionRing({ totals }: Props) {
             datasets: [
               {
                 data: hasData ? [proteinKcal, carbsKcal, fatKcal] : [1],
-                backgroundColor: hasData ? MACRO_COLORS : ["#e4e4e7"],
+                backgroundColor: hasData ? MACRO_COLORS : ["rgba(255,255,255,0.07)"],
                 borderWidth: 0,
                 hoverOffset: 4,
               },
@@ -95,7 +95,7 @@ export function MacroDistributionRing({ totals }: Props) {
         />
       </div>
       {/* mini legend */}
-      <div className="flex gap-3 text-xs text-zinc-500">
+      <div className="flex gap-3 text-xs text-muted-foreground">
         {MACRO_LABELS.map((label, i) => (
           <span key={label} className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: MACRO_COLORS[i] }} />

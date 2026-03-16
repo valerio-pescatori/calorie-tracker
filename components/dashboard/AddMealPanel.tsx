@@ -41,17 +41,17 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-zinc-900">Review estimate</h3>
-        <button onClick={onCancel}><X className="h-4 w-4 text-zinc-400" /></button>
+        <h3 className="font-semibold text-foreground">Review estimate</h3>
+        <button onClick={onCancel}><X className="h-4 w-4 text-muted-foreground" /></button>
       </div>
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-500">Meal name</label>
+          <label className="text-xs font-medium text-muted-foreground">Meal name</label>
           <input
             value={form.name}
             onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))}
-            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="input-dark"
           />
         </div>
 
@@ -65,24 +65,24 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
             ] as { key: keyof ParsedMeal; label: string }[]
           ).map(({ key, label }) => (
             <div key={key} className="space-y-1">
-              <label className="text-xs font-medium text-zinc-500">{label}</label>
+              <label className="text-xs font-medium text-muted-foreground">{label}</label>
               <input
                 type="number"
                 min={0}
                 value={form[key] as number}
                 onChange={f(key as keyof typeof form)}
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                className="input-dark"
               />
             </div>
           ))}
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-500">Meal type</label>
+          <label className="text-xs font-medium text-muted-foreground">Meal type</label>
           <select
             value={form.mealType}
             onChange={(e) => setForm((v) => ({ ...v, mealType: e.target.value as MealType }))}
-            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="input-dark"
           >
             <option value="breakfast">Breakfast</option>
             <option value="lunch">Lunch</option>
@@ -92,11 +92,11 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
         </div>
 
         {form.confidence !== 'high' && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 space-y-1">
-            <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
+          <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 space-y-1">
+            <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400">
               {form.confidence === 'low' ? '⚠ Low confidence' : 'Medium confidence'}
             </Badge>
-            {form.notes && <p className="text-xs text-amber-700 italic">&ldquo;{form.notes}&rdquo;</p>}
+            {form.notes && <p className="text-xs text-amber-400/80 italic">&ldquo;{form.notes}&rdquo;</p>}
           </div>
         )}
       </div>
@@ -145,15 +145,15 @@ function TextInput({ onParsed }: { onParsed: (meal: ParsedMeal) => void }) {
         placeholder="Describe what you ate… e.g. 'A bowl of pasta bolognese with parmesan and a glass of red wine'"
         value={description}
         onChange={(e) => setDescription(e.target.value.slice(0, 500))}
-        className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-zinc-400">{description.length}/500</span>
+        <span className="text-xs text-muted-foreground">{description.length}/500</span>
         <Button size="sm" disabled={!description.trim() || loading} onClick={handleSubmit}>
           {loading ? 'Analysing…' : <><Send className="h-4 w-4 mr-1" /> Analyse</>}
         </Button>
       </div>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -204,22 +204,22 @@ function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) 
         onClick={recording ? stopRecording : startRecording}
         className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-lg
           ${recording
-            ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-            : 'bg-zinc-900 hover:bg-zinc-700'
+            ? 'bg-destructive hover:bg-destructive/90 animate-pulse'
+            : 'fab-glow'
           }`}
       >
         {recording
           ? <MicOff className="h-8 w-8 text-white" />
           : <Mic className="h-8 w-8 text-white" />}
       </button>
-      <p className="text-sm text-zinc-500">{recording ? 'Listening… tap to stop' : 'Tap to start recording'}</p>
+      <p className="text-sm text-muted-foreground">{recording ? 'Listening… tap to stop' : 'Tap to start recording'}</p>
 
       {transcript && (
-        <div className="w-full rounded-lg bg-zinc-50 border border-zinc-200 p-3 text-sm text-zinc-700 italic">
+        <div className="w-full rounded-lg bg-white/5 border border-white/10 p-3 text-sm text-foreground/80 italic">
           &ldquo;{transcript}&rdquo;
         </div>
       )}
-      {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+      {error && <p className="text-xs text-destructive text-center">{error}</p>}
 
       {transcript && !recording && (
         <Button className="w-full" onClick={() => onTranscript(transcript)}>
@@ -352,7 +352,7 @@ export function AddMealPanel() {
       {/* FAB */}
       <button
         onClick={() => { setParsed(null); setOpen(true); }}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-zinc-900 hover:bg-zinc-700 text-white rounded-full shadow-xl flex items-center justify-center transition-colors z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 fab-glow text-white rounded-full flex items-center justify-center z-50"
         aria-label="Add meal"
       >
         <Plus className="h-7 w-7" />
@@ -373,13 +373,13 @@ export function AddMealPanel() {
           ) : (
             <>
               {/* Tab selector */}
-              <div className="flex gap-1 bg-zinc-100 rounded-xl p-1 mb-5">
+              <div className="flex gap-1 bg-white/[0.06] border border-white/[0.08] rounded-xl p-1 mb-5">
                 {TABS.map(({ id, label, icon }) => (
                   <button
                     key={id}
                     onClick={() => setTab(id)}
                     className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors
-                      ${tab === id ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+                      ${tab === id ? 'bg-white/10 text-foreground border border-white/[0.12]' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {icon} {label}
                   </button>
