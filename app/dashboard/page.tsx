@@ -10,6 +10,7 @@ import { MacroBreakdownBar } from "@/components/dashboard/MacroBreakdownBar";
 import { MealTimeline } from "@/components/dashboard/MealTimeline";
 import { AddMealPanel } from "@/components/dashboard/AddMealPanel";
 import { GoalSettingsSheet } from "@/components/dashboard/GoalSettingsSheet";
+import { WeeklyCaloriesChart } from "@/components/dashboard/WeeklyCaloriesChart";
 import { Button } from "@/components/ui/button";
 
 const EMPTY_MEALS: [] = [];
@@ -58,10 +59,12 @@ export default function DashboardPage() {
         </section>
 
         {/* Macro progress bars */}
-
         <MacroBreakdownBar totals={totals} goals={goals} />
 
-        {/* Meal list grouped by meal type */}
+        {/* 7-day calorie history */}
+        <WeeklyCaloriesChart />
+
+        {/* Meal summary card — tap to see full breakdown */}
         <MealTimeline meals={meals} />
       </main>
 
