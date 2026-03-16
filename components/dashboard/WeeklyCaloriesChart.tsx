@@ -1,32 +1,54 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { computeTotals } from "@/lib/nutrition";
 
-function getPast7Days(): string[] {
-  const days: string[] = [];
+function getDateRange(daysAgo: number, count: number): string[] {
+  const result: string[] = [];
   const today = new Date();
-  for (let i = 6; i >= 0; i--) {
+  for (let i = daysAgo + count - 1; i >= daysAgo; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    result.push(d.toISOString().slice(0, 10));
   }
-  return days;
+  return result;
+}
+
+/** Convert points to a Catmull-Rom SVG path for smooth curves */
+function catmullRomPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return "";
+  const tension = 0.25;
+  let d = `M ${pts[0].x},${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(i + 2, pts.length - 1)];
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+  }
+  return d;
 }
 
 export function WeeklyCaloriesChart() {
-  const days = useMemo(() => getPast7Days(), []);
+  const thisWeekDays = useMemo(() => getDateRange(0, 7), []);
+  const prevWeekDays = useMemo(() => getDateRange(7, 7), []);
+  const allDays = useMemo(() => [...prevWeekDays, ...thisWeekDays], [prevWeekDays, thisWeekDays]);
+
   const hydrateForDate = useStore((s) => s.hydrateForDate);
   const logs = useStore((s) => s.logs);
   const goal = useStore((s) => s.profile.goals.calories);
   const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
-    days.forEach((d) => hydrateForDate(d));
-  }, [days, hydrateForDate]);
+    allDays.forEach((d) => hydrateForDate(d));
+  }, [allDays, hydrateForDate]);
 
-  const data = days.map((date) => {
+  const thisWeekData = thisWeekDays.map((date) => {
     const meals = logs[date]?.meals ?? [];
     const calories = computeTotals(meals).calories;
     const dayOfWeek = new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
@@ -34,62 +56,48 @@ export function WeeklyCaloriesChart() {
   });
 
   const W = 280;
-  const H = 100;
-  const PAD = { top: 16, right: 8, bottom: 24, left: 8 };
+  const H = 130;
+  const PAD = { top: 20, right: 8, bottom: 28, left: 8 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const daysWithData = data.filter((d) => d.calories > 0);
-  const avgCalories = daysWithData.length > 0
-    ? Math.round(daysWithData.reduce((sum, d) => sum + d.calories, 0) / daysWithData.length)
-    : 0;
+  const maxVal = Math.max(...thisWeekData.map((d) => d.calories), goal, 1);
 
-  const maxVal = Math.max(...data.map((d) => d.calories), goal, 1);
-
-  // Map each data point to an (x, y) coordinate
-  const points = data.map((d, i) => ({
+  const points = thisWeekData.map((d, i) => ({
     x: PAD.left + (i / 6) * innerW,
     y: PAD.top + innerH - (d.calories / maxVal) * innerH,
     ...d,
   }));
 
-  // Build SVG polyline points string (skip days with 0 calories for a clean line)
-  const linePoints = points
-    .filter((p) => p.calories > 0)
-    .map((p) => `${p.x},${p.y}`)
-    .join(" ");
-
-  // Area fill path (close under the line back to the baseline)
   const nonZero = points.filter((p) => p.calories > 0);
-  const areaPath =
-    nonZero.length > 1
-      ? `M ${nonZero[0].x},${PAD.top + innerH} ` +
-        nonZero.map((p) => `L ${p.x},${p.y}`).join(" ") +
-        ` L ${nonZero[nonZero.length - 1].x},${PAD.top + innerH} Z`
-      : "";
+  const linePath = catmullRomPath(nonZero);
 
   const goalY = PAD.top + innerH - (goal / maxVal) * innerH;
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
   return (
     <section className="glass-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Past 7 Days</h3>
-        <span className="text-xs text-muted-foreground">Avg: {avgCalories} kcal</span>
+        <h3 className="text-xs font-bold tracking-wider text-foreground uppercase">Last 7 Days</h3>
       </div>
 
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
+        className="w-full overflow-visible"
         aria-label="7-day calorie history line chart"
+        onMouseLeave={() => setActiveIdx(null)}
       >
         <defs>
-          <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="oklch(0.65 0.22 285)" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="oklch(0.65 0.22 285)" stopOpacity="0" />
+          <linearGradient id="line-gradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#8b5cf6" />
+            <stop offset="100%" stopColor="#2dd4bf" />
           </linearGradient>
           <clipPath id="chart-clip">
             <rect x={PAD.left} y={PAD.top} width={innerW} height={innerH} />
           </clipPath>
+          <filter id="line-glow" x="-20%" y="-60%" width="140%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+          </filter>
         </defs>
 
         {/* Goal dashed line */}
@@ -98,40 +106,54 @@ export function WeeklyCaloriesChart() {
           y1={goalY}
           x2={PAD.left + innerW}
           y2={goalY}
-          stroke="oklch(0.65 0.22 285 / 0.30)"
+          stroke="rgba(139,92,246,0.25)"
           strokeDasharray="4 3"
           strokeWidth={1}
         />
+        <text
+          x={PAD.left}
+          y={goalY - 4}
+          textAnchor="start"
+          fontSize={8}
+          fontWeight="600"
+          fill="rgba(139,92,246,0.25)"
+        >
+          {goal} kcal
+        </text>
 
-        {/* Area fill */}
-        {areaPath && (
-          <path
-            d={areaPath}
-            fill="url(#area-fill)"
-            clipPath="url(#chart-clip)"
-          />
-        )}
-
-        {/* Line */}
-        {linePoints && (
-          <polyline
-            points={linePoints}
-            fill="none"
-            stroke="oklch(0.65 0.22 285)"
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            clipPath="url(#chart-clip)"
-          />
+        {/* Smooth gradient line */}
+        {linePath && (
+          <>
+            {/* Glow layer */}
+            <path
+              d={linePath}
+              fill="none"
+              stroke="url(#line-gradient)"
+              strokeWidth={7}
+              strokeLinecap="round"
+              clipPath="url(#chart-clip)"
+              filter="url(#line-glow)"
+              opacity={0.35}
+            />
+            {/* Sharp line */}
+            <path
+              d={linePath}
+              fill="none"
+              stroke="url(#line-gradient)"
+              strokeWidth={2.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              clipPath="url(#chart-clip)"
+            />
+          </>
         )}
 
         {/* Points + labels */}
         {points.map(({ x, y, calories, dayOfWeek, isToday }, i) => (
           <g key={i}>
-            {/* Day label */}
             <text
               x={x}
-              y={H - 4}
+              y={H - 6}
               textAnchor="middle"
               fontSize={9}
               fontWeight={isToday ? "600" : "400"}
@@ -142,18 +164,26 @@ export function WeeklyCaloriesChart() {
 
             {calories > 0 && (
               <>
-                {/* Dot */}
                 <circle
                   cx={x}
                   cy={y}
-                  r={isToday ? 4 : 3}
-                  fill={calories > goal ? "oklch(0.65 0.22 25)" : "oklch(0.65 0.22 285)"}
+                  r={3}
+                  fill={calories > goal ? "#ef4444" : "#2dd4bf"}
                   stroke="oklch(0.10 0.018 285)"
-                  strokeWidth={1.5}
+                  strokeWidth={1}
+                  style={{ pointerEvents: "none" }}
                 />
-
-                {/* Calorie label — today always shows, others show on hover via title */}
-                {isToday && (
+                {/* Invisible hit area */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={10}
+                  fill="transparent"
+                  style={{ cursor: "pointer" }}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  onClick={() => setActiveIdx(i === activeIdx ? null : i)}
+                />
+                {isToday && activeIdx !== i && (
                   <text
                     x={x}
                     y={y - 8}
@@ -161,15 +191,41 @@ export function WeeklyCaloriesChart() {
                     fontSize={8.5}
                     fontWeight="600"
                     fill="oklch(0.92 0.008 285)"
+                    style={{ pointerEvents: "none" }}
                   >
                     {calories}
                   </text>
                 )}
-                <title>{`${dayOfWeek}: ${calories} kcal`}</title>
               </>
             )}
           </g>
         ))}
+
+        {/* Tooltip */}
+        {activeIdx !== null && (() => {
+          const pt = points[activeIdx];
+          if (!pt || pt.calories === 0) return null;
+          const TW = 68;
+          const TH = 26;
+          const tx = Math.min(Math.max(pt.x - TW / 2, PAD.left), W - PAD.right - TW);
+          const ty = pt.y - TH - 10;
+          return (
+            <g style={{ pointerEvents: "none" }}>
+              <rect
+                x={tx} y={ty} width={TW} height={TH} rx={5}
+                fill="oklch(0.16 0.018 285)"
+                stroke="rgba(139,92,246,0.45)"
+                strokeWidth={0.75}
+              />
+              <text x={tx + TW / 2} y={ty + 9} textAnchor="middle" fontSize={7.5} fill="oklch(0.55 0.025 285)">
+                {pt.dayOfWeek}
+              </text>
+              <text x={tx + TW / 2} y={ty + 20} textAnchor="middle" fontSize={9} fontWeight="700" fill="oklch(0.92 0.008 285)">
+                {pt.calories} kcal
+              </text>
+            </g>
+          );
+        })()}
       </svg>
     </section>
   );

@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Settings } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { computeTotals } from "@/lib/nutrition";
 import { CalorieSummaryRing } from "@/components/dashboard/CalorieSummaryRing";
-import { MacroDistributionRing } from "@/components/dashboard/MacroDistributionRing";
-import { MacroBreakdownBar } from "@/components/dashboard/MacroBreakdownBar";
+import { MacroMiniCards } from "@/components/dashboard/MacroMiniCards";
 import { MealTimeline } from "@/components/dashboard/MealTimeline";
 import { AddMealPanel } from "@/components/dashboard/AddMealPanel";
 import { GoalSettingsSheet } from "@/components/dashboard/GoalSettingsSheet";
 import { WeeklyCaloriesChart } from "@/components/dashboard/WeeklyCaloriesChart";
+import { BottomNav } from "@/components/dashboard/BottomNav";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 const EMPTY_MEALS: [] = [];
 
@@ -24,25 +25,50 @@ export default function DashboardPage() {
   const hydrateForDate = useStore((s) => s.hydrateForDate);
   const hydrateProfile = useStore((s) => s.hydrateProfile);
 
-  // Hydrate store from server on first render
+  const [addMealOpen, setAddMealOpen] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("");
+
   useEffect(() => {
     hydrateForDate(key);
     hydrateProfile();
   }, [key, hydrateForDate, hydrateProfile]);
 
-  const dateLabel = new Date().toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        const user = data.user;
+        const name =
+          user?.user_metadata?.full_name ??
+          user?.email?.split("@")[0] ??
+          "there";
+        setDisplayName(name);
+      });
+  }, []);
+
+  // Avatar initials (first letter of each word, max 2)
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
 
   return (
     <div className="relative min-h-dvh pb-28">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-foreground leading-tight">Today</h1>
-          <p className="text-xs text-muted-foreground">{dateLabel}</p>
+        <div className="flex items-center gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-violet-500/30 flex items-center justify-center text-sm font-bold text-violet-200 shrink-0">
+            {initials || "?"}
+          </div>
+          <div>
+            <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Welcome back</p>
+            <h1 className="text-base font-bold text-foreground leading-tight">
+              {displayName || "…"}
+            </h1>
+          </div>
         </div>
         <GoalSettingsSheet>
           <Button variant="ghost" size="icon" aria-label="Open goal settings">
@@ -51,25 +77,32 @@ export default function DashboardPage() {
         </GoalSettingsSheet>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 pt-5 space-y-5">
-        {/* Calorie & Macro rings */}
-        <section className="grid grid-cols-2 gap-2 glass-card-elevated p-5">
+      <main className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+        {/* Large calorie ring — centered */}
+        <div className="flex justify-center">
           <CalorieSummaryRing consumed={totals.calories} goal={goals.calories} />
-          <MacroDistributionRing totals={totals} />
-        </section>
+        </div>
 
-        {/* Macro progress bars */}
-        <MacroBreakdownBar totals={totals} goals={goals} />
+        {/* Macro mini cards */}
+        <MacroMiniCards totals={totals} goals={goals} />
 
         {/* 7-day calorie history */}
         <WeeklyCaloriesChart />
 
-        {/* Meal summary card — tap to see full breakdown */}
-        <MealTimeline meals={meals} />
+        {/* Today's meals */}
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold tracking-wider text-foreground/50 uppercase">
+            Today&apos;s Meals
+          </h2>
+          <MealTimeline meals={meals} />
+        </div>
       </main>
 
-      {/* Floating add meal button + sheet */}
-      <AddMealPanel />
+      {/* Add Meal Sheet (controlled by BottomNav) */}
+      <AddMealPanel open={addMealOpen} onOpenChange={setAddMealOpen} />
+
+      {/* Bottom nav */}
+      <BottomNav onAddMeal={() => setAddMealOpen(true)} />
     </div>
   );
 }

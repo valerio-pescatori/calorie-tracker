@@ -1,20 +1,28 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MealEntry, MealType } from "@/types";
+import { Apple, Moon, Scale, Sun } from "lucide-react";
+import { type ComponentType } from "react";
 
 interface Props {
   meals: MealEntry[];
 }
 
-const MEAL_SECTIONS: { type: MealType; label: string; emoji: string }[] = [
-  { type: "breakfast", label: "Breakfast", emoji: "🌅" },
-  { type: "lunch", label: "Lunch", emoji: "☀️" },
-  { type: "dinner", label: "Dinner", emoji: "🌙" },
-  { type: "snack", label: "Snacks", emoji: "🍎" },
-];
+interface MealSection {
+  type: MealType;
+  label: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  bg: string;
+  text: string;
+}
 
+const MEAL_SECTIONS: MealSection[] = [
+  { type: "breakfast", label: "Breakfast", icon: Sun, bg: "bg-violet-500/20", text: "text-violet-500" },
+  { type: "lunch", label: "Lunch", icon: Scale, bg: "bg-teal-500/20", text: "text-teal-500" },
+  { type: "dinner", label: "Dinner", icon: Moon, bg: "bg-indigo-500/20", text: "text-indigo-500" },
+  { type: "snack", label: "Snacks", icon: Apple, bg: "bg-amber-500/20", text: "text-amber-500" },
+];
 
 export function MealTimeline({ meals }: Props) {
   const grouped = new Map<MealType, MealEntry[]>();
@@ -24,51 +32,39 @@ export function MealTimeline({ meals }: Props) {
     grouped.set(meal.mealType, group);
   }
 
-  const totalKcal = meals.reduce((s, m) => s + m.calories, 0);
+  const sections = MEAL_SECTIONS.filter(({ type }) => (grouped.get(type)?.length ?? 0) > 0);
+
+  if (sections.length === 0) {
+    return <p className="text-xs text-foreground/30 text-center py-4">No meals logged yet — tap + to add one</p>;
+  }
 
   return (
-    <div className="glass-card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground">Meals Today</h3>
-          <div className="flex items-center gap-1.5">
-            {totalKcal > 0 && (
-              <span className="text-xs font-medium text-muted-foreground">{totalKcal} kcal</span>
-            )}
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
+    <div className="space-y-3">
+      {sections.map(({ type, label, icon: Icon, bg, text }) => {
+        const group = grouped.get(type)!;
+        const sectionKcal = group.reduce((s, m) => s + m.calories, 0);
+        const description = group.map((m) => m.name).join(", ");
 
-        {meals.length === 0 ? (
-          <p className="text-xs text-foreground/30 text-center py-2">No meals logged yet — tap to add one</p>
-        ) : (
-          <div className="divide-y divide-white/5">
-            {MEAL_SECTIONS.map(({ type, label, emoji }) => {
-              const group = grouped.get(type) ?? [];
-              const sectionKcal = group.reduce((s, m) => s + m.calories, 0);
-              const hasItems = group.length > 0;
-              return (
-                <div key={type} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
-                  <span className="text-base w-5 shrink-0 leading-none">{emoji}</span>
-                  <span className={cn("flex-1 text-xs", hasItems ? "text-foreground" : "text-foreground/30")}>
-                    {label}
-                  </span>
-                  {hasItems ? (
-                    <>
-                      <span className="text-xs text-muted-foreground">
-                        {group.length} item{group.length !== 1 ? "s" : ""}
-                      </span>
-                      <span className="text-xs font-medium text-foreground w-16 text-right">
-                        {sectionKcal} kcal
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-foreground/20">—</span>
-                  )}
-                </div>
-              );
-            })}
+        return (
+          <div key={type} className="glass-card flex items-center gap-4 p-4">
+            {/* Icon */}
+            <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0", bg)}>
+              <Icon size={20} className={text} />
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground truncate">{description}</p>
+            </div>
+
+            {/* Kcal */}
+            <span className="text-sm font-bold text-foreground tabular-nums shrink-0">
+              {sectionKcal} <span className="text-xs font-normal text-muted-foreground">kcal</span>
+            </span>
           </div>
-        )}
+        );
+      })}
     </div>
   );
 }

@@ -295,8 +295,18 @@ function ManualInput({ onAdd }: ManualInputProps) {
 
 // ─── Add Meal Panel ───────────────────────────────────────────────────────────
 
-export function AddMealPanel() {
-  const [open, setOpen] = useState(false);
+interface AddMealPanelProps {
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+}
+
+export function AddMealPanel({ open: controlledOpen, onOpenChange }: AddMealPanelProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  function setOpen(v: boolean) {
+    setInternalOpen(v);
+    onOpenChange?.(v);
+  }
   const [tab, setTab] = useState<Tab>('text');
   const [parsed, setParsed] = useState<ParsedMeal | null>(null);
   const addMeal = useStore((s) => s.addMeal);
@@ -349,15 +359,6 @@ export function AddMealPanel() {
 
   return (
     <>
-      {/* FAB */}
-      <button
-        onClick={() => { setParsed(null); setOpen(true); }}
-        className="fixed bottom-6 right-6 w-14 h-14 fab-glow text-white rounded-full flex items-center justify-center z-50"
-        aria-label="Add meal"
-      >
-        <Plus className="h-7 w-7" />
-      </button>
-
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl h-auto max-h-[85dvh] overflow-y-auto">
           <SheetHeader className="mb-4">
@@ -373,13 +374,13 @@ export function AddMealPanel() {
           ) : (
             <>
               {/* Tab selector */}
-              <div className="flex gap-1 bg-white/[0.06] border border-white/[0.08] rounded-xl p-1 mb-5">
+              <div className="flex gap-1 bg-white/6 border border-white/8 rounded-xl p-1 mb-5">
                 {TABS.map(({ id, label, icon }) => (
                   <button
                     key={id}
                     onClick={() => setTab(id)}
                     className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors
-                      ${tab === id ? 'bg-white/10 text-foreground border border-white/[0.12]' : 'text-muted-foreground hover:text-foreground'}`}
+                      ${tab === id ? 'bg-white/10 text-foreground border border-white/12' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {icon} {label}
                   </button>

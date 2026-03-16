@@ -172,20 +172,10 @@
   }
 
   .glass-card {
-    @apply rounded-2xl border border-white/[0.07] backdrop-blur-lg backdrop-saturate-150;
-    background: oklch(0.14 0.022 285 / 0.70);
+    @apply  border rounded-2xl bg-white/6 border-white/12 backdrop-blur-lg;
     box-shadow:
       0 8px 32px oklch(0 0 0 / 0.45),
       inset 0 1px 0 oklch(1 0 0 / 0.06);
-  }
-
-  .glass-card-elevated {
-    @apply rounded-2xl border border-white/10 backdrop-blur-[20px] backdrop-saturate-[1.7];
-    background: oklch(0.16 0.028 285 / 0.76);
-    box-shadow:
-      0 12px 50px oklch(0 0 0 / 0.55),
-      inset 0 1px 0 oklch(1 0 0 / 0.09),
-      0 0 0 1px oklch(0.65 0.22 285 / 0.06);
   }
 
   .fab-glow {
