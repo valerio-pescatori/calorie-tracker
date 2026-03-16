@@ -18,6 +18,72 @@ const MACRO_LABELS = ["Protein", "Carbs", "Fat"];
 export function MacroDistributionRing({ totals }: Props) {
   const mounted = useMounted();
 
+  const segmentLabelPlugin = useMemo(
+    () => ({
+      id: "segmentLabels",
+      afterDraw(chart: ChartJS) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta?.data?.length) return;
+
+        const total = (chart.data.datasets[0].data as number[]).reduce((a, b) => a + b, 0);
+        if (total === 0) return;
+
+        meta.data.forEach((arc, i) => {
+          const el = arc as ArcElement;
+          const pct = Math.round(((chart.data.datasets[0].data[i] as number) / total) * 100);
+          if (pct < 7) return;
+
+          const text = `${pct}%`;
+          const midAngle = (el.startAngle + el.endAngle) / 2;
+          const midRadius = (el.innerRadius + el.outerRadius) / 2;
+
+          ctx.save();
+          ctx.font = "bold 11px \"Inter\", sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,1)";
+          ctx.strokeStyle = "rgba(0,0,0,0.65)";
+          ctx.lineWidth = 2.5;
+          ctx.lineJoin = "round";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          const chars = text.split("");
+          const charWidths = chars.map((c) => ctx.measureText(c).width);
+          const totalWidth = charWidths.reduce((a, b) => a + b, 0);
+          const totalAngle = totalWidth / midRadius;
+
+          // Text with +π/2 rotation flips upside-down when charAngle ∈ (0, π).
+          // Fix: use -π/2 rotation + dir=-1 for that half so glyphs stay readable.
+          const norm = ((midAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+          const isBottomHalf = norm > 0 && norm < Math.PI;
+
+          const dir       = isBottomHalf ? -1 : 1;
+          const rotOffset = isBottomHalf ? -Math.PI / 2 : Math.PI / 2;
+
+          let currentAngle = midAngle - dir * (totalAngle / 2);
+
+          chars.forEach((char, j) => {
+            const charAngle = currentAngle + dir * (charWidths[j] / 2 / midRadius);
+            const x = el.x + Math.cos(charAngle) * midRadius;
+            const y = el.y + Math.sin(charAngle) * midRadius;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(charAngle + rotOffset);
+            ctx.strokeText(char, 0, 0);
+            ctx.fillText(char, 0, 0);
+            ctx.restore();
+
+            currentAngle += dir * (charWidths[j] / midRadius);
+          });
+
+          ctx.restore();
+        });
+      },
+    }),
+    [],
+  );
+
   const centerTextPlugin = useMemo(
     () => ({
       id: "macroCenter",
@@ -91,7 +157,7 @@ export function MacroDistributionRing({ totals }: Props) {
               },
             },
           }}
-          plugins={[centerTextPlugin]}
+          plugins={[centerTextPlugin, segmentLabelPlugin]}
         />
       </div>
       {/* mini legend */}
