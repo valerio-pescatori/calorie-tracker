@@ -31,8 +31,7 @@ export type ActivityLevel =
   | 'very_active'
   | 'extra_active';
 
-export interface UserProfile {
-  goals: MacroTotals;
+export interface BodyStats {
   weightKg?: number;
   heightCm?: number;
   ageYears?: number;

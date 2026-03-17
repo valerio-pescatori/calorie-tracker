@@ -1,4 +1,4 @@
-import type { MacroTotals, UserProfile, ActivityLevel } from '@/types';
+import type { MacroTotals, BodyStats, ActivityLevel } from '@/types';
 
 export function computeTotals(
   meals: Array<{ calories: number; protein: number; carbs: number; fat: number }>,
@@ -19,8 +19,8 @@ export function macrosToCalories(protein: number, carbs: number, fat: number): n
 }
 
 /** Mifflin-St Jeor BMR */
-export function calcBMR(profile: UserProfile): number {
-  const { weightKg = 70, heightCm = 170, ageYears = 30, sex = 'male' } = profile;
+export function calcBMR(stats: BodyStats): number {
+  const { weightKg = 70, heightCm = 170, ageYears = 30, sex = 'male' } = stats;
   const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
   return sex === 'female' ? base - 161 : base + 5;
 }
@@ -33,8 +33,8 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   extra_active: 1.9,
 };
 
-export function calcTDEE(profile: UserProfile): number {
-  return Math.round(calcBMR(profile) * ACTIVITY_MULTIPLIERS[profile.activityLevel ?? 'sedentary']);
+export function calcTDEE(stats: BodyStats): number {
+  return Math.round(calcBMR(stats) * ACTIVITY_MULTIPLIERS[stats.activityLevel ?? 'sedentary']);
 }
 
 export function getProgressColor(consumed: number, goal: number): string {
