@@ -41,7 +41,7 @@ export function WeeklyCaloriesChart() {
 
   const hydrateForDate = useStore((s) => s.hydrateForDate);
   const logs = useStore((s) => s.logs);
-  const goal = useStore((s) => s.profile.goals.calories);
+  const goal = useStore((s) => s.goals?.calories ?? null);
   const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function WeeklyCaloriesChart() {
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const maxVal = Math.max(...thisWeekData.map((d) => d.calories), goal, 1);
+  const maxVal = Math.max(...thisWeekData.map((d) => d.calories), goal ?? 0, 1);
 
   const points = thisWeekData.map((d, i) => ({
     x: PAD.left + (i / 6) * innerW,
@@ -72,7 +72,8 @@ export function WeeklyCaloriesChart() {
   const nonZero = points.filter((p) => p.calories > 0);
   const linePath = catmullRomPath(nonZero);
 
-  const goalY = PAD.top + innerH - (goal / maxVal) * innerH;
+  const goalY = goal !== null ? PAD.top + innerH - (goal / maxVal) * innerH : null;
+  const gridLines = Array.from({ length: Math.floor(maxVal / 500) }, (_, i) => (i + 1) * 500).filter((v) => v < maxVal);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
   return (
@@ -93,33 +94,54 @@ export function WeeklyCaloriesChart() {
             <stop offset="100%" stopColor="#2dd4bf" />
           </linearGradient>
           <clipPath id="chart-clip">
-            <rect x={PAD.left} y={PAD.top} width={innerW} height={innerH} />
+            <rect x={PAD.left} y={0} width={innerW} height={H} />
           </clipPath>
           <filter id="line-glow" x="-20%" y="-60%" width="140%" height="220%">
             <feGaussianBlur stdDeviation="3" result="blur" />
           </filter>
         </defs>
 
+        {/* 500 kcal grid lines */}
+        {gridLines.map((v) => {
+          const y = PAD.top + innerH - (v / maxVal) * innerH;
+          return (
+            <g key={v}>
+              <line
+                x1={PAD.left}
+                y1={y}
+                x2={PAD.left + innerW}
+                y2={y}
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth={1}
+              />
+            </g>
+          );
+        })}
+
         {/* Goal dashed line */}
-        <line
-          x1={PAD.left}
-          y1={goalY}
-          x2={PAD.left + innerW}
-          y2={goalY}
-          stroke="rgba(139,92,246,0.25)"
-          strokeDasharray="4 3"
-          strokeWidth={1}
-        />
-        <text
-          x={PAD.left}
-          y={goalY - 4}
-          textAnchor="start"
-          fontSize={8}
-          fontWeight="600"
-          fill="rgba(139,92,246,0.25)"
-        >
-          {goal} kcal
-        </text>
+        {goal !== null && goalY !== null && (
+          <>
+            <line
+              x1={PAD.left}
+              y1={goalY}
+              x2={PAD.left + innerW}
+              y2={goalY}
+              stroke="rgba(139,92,246,0.25)"
+              strokeDasharray="4 3"
+              strokeWidth={1}
+            />
+            <text
+              x={PAD.left}
+              y={goalY - 4}
+              textAnchor="start"
+              fontSize={8}
+              fontWeight="600"
+              fill="rgba(139,92,246,0.25)"
+            >
+              {goal} kcal
+            </text>
+          </>
+        )}
 
         {/* Smooth gradient line */}
         {linePath && (
@@ -168,7 +190,7 @@ export function WeeklyCaloriesChart() {
                   cx={x}
                   cy={y}
                   r={3}
-                  fill={calories > goal ? "#ef4444" : "#2dd4bf"}
+                  fill={goal !== null && calories > goal ? "#ef4444" : "#2dd4bf"}
                   stroke="oklch(0.10 0.018 285)"
                   strokeWidth={1}
                   style={{ pointerEvents: "none" }}
@@ -202,30 +224,42 @@ export function WeeklyCaloriesChart() {
         ))}
 
         {/* Tooltip */}
-        {activeIdx !== null && (() => {
-          const pt = points[activeIdx];
-          if (!pt || pt.calories === 0) return null;
-          const TW = 68;
-          const TH = 26;
-          const tx = Math.min(Math.max(pt.x - TW / 2, PAD.left), W - PAD.right - TW);
-          const ty = pt.y - TH - 10;
-          return (
-            <g style={{ pointerEvents: "none" }}>
-              <rect
-                x={tx} y={ty} width={TW} height={TH} rx={5}
-                fill="oklch(0.16 0.018 285)"
-                stroke="rgba(139,92,246,0.45)"
-                strokeWidth={0.75}
-              />
-              <text x={tx + TW / 2} y={ty + 9} textAnchor="middle" fontSize={7.5} fill="oklch(0.55 0.025 285)">
-                {pt.dayOfWeek}
-              </text>
-              <text x={tx + TW / 2} y={ty + 20} textAnchor="middle" fontSize={9} fontWeight="700" fill="oklch(0.92 0.008 285)">
-                {pt.calories} kcal
-              </text>
-            </g>
-          );
-        })()}
+        {activeIdx !== null &&
+          (() => {
+            const pt = points[activeIdx];
+            if (!pt || pt.calories === 0) return null;
+            const TW = 68;
+            const TH = 26;
+            const tx = Math.min(Math.max(pt.x - TW / 2, PAD.left), W - PAD.right - TW);
+            const ty = pt.y - TH - 10;
+            return (
+              <g style={{ pointerEvents: "none" }}>
+                <rect
+                  x={tx}
+                  y={ty}
+                  width={TW}
+                  height={TH}
+                  rx={5}
+                  fill="oklch(0.16 0.018 285)"
+                  stroke="rgba(139,92,246,0.45)"
+                  strokeWidth={0.75}
+                />
+                <text x={tx + TW / 2} y={ty + 9} textAnchor="middle" fontSize={7.5} fill="oklch(0.55 0.025 285)">
+                  {pt.dayOfWeek}
+                </text>
+                <text
+                  x={tx + TW / 2}
+                  y={ty + 20}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontWeight="700"
+                  fill="oklch(0.92 0.008 285)"
+                >
+                  {pt.calories} kcal
+                </text>
+              </g>
+            );
+          })()}
       </svg>
     </section>
   );
