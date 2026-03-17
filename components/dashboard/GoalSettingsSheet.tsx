@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useStore } from '@/lib/store';
 import { calcTDEE } from '@/lib/nutrition';
-import type { MacroTotals, ActivityLevel, UserProfile } from '@/types';
+import type { MacroTotals, ActivityLevel, BodyStats } from '@/types';
 
 interface Props {
   children: React.ReactNode;
@@ -28,35 +28,52 @@ const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
 ];
 
 export function GoalSettingsSheet({ children }: Props) {
-  const goals = useStore((s) => s.profile.goals);
-  const profile = useStore((s) => s.profile);
+  const goals = useStore((s) => s.goals);
+  const bodyStats = useStore((s) => s.bodyStats);
   const updateGoals = useStore((s) => s.updateGoals);
-  const updateProfile = useStore((s) => s.updateProfile);
+  const updateBodyStats = useStore((s) => s.updateBodyStats);
 
-  const [form, setForm] = useState<MacroTotals>({ ...goals });
+  const [form, setForm] = useState({
+    calories: goals?.calories?.toString() ?? '',
+    protein: goals?.protein?.toString() ?? '',
+    carbs: goals?.carbs?.toString() ?? '',
+    fat: goals?.fat?.toString() ?? '',
+  });
   const [tdeeOpen, setTdeeOpen] = useState(false);
   const [tdeeForm, setTdeeForm] = useState({
-    weightKg: profile.weightKg ?? 70,
-    heightCm: profile.heightCm ?? 170,
-    ageYears: profile.ageYears ?? 30,
-    sex: profile.sex ?? ('male' as UserProfile['sex']),
-    activityLevel: profile.activityLevel ?? ('sedentary' as ActivityLevel),
+    weightKg: bodyStats.weightKg?.toString() ?? '',
+    heightCm: bodyStats.heightCm?.toString() ?? '',
+    ageYears: bodyStats.ageYears?.toString() ?? '',
+    sex: bodyStats.sex ?? ('' as BodyStats['sex'] | ''),
+    activityLevel: bodyStats.activityLevel ?? ('' as ActivityLevel | ''),
   });
 
-  function handleSave() {
-    updateGoals(form);
+  function handleTdeeFill() {
+    const stats: BodyStats = {
+      weightKg: tdeeForm.weightKg ? Number(tdeeForm.weightKg) : undefined,
+      heightCm: tdeeForm.heightCm ? Number(tdeeForm.heightCm) : undefined,
+      ageYears: tdeeForm.ageYears ? Number(tdeeForm.ageYears) : undefined,
+      sex: tdeeForm.sex || undefined,
+      activityLevel: (tdeeForm.activityLevel || undefined) as ActivityLevel | undefined,
+    };
+    const tdee = calcTDEE(stats);
+    setForm((f) => ({ ...f, calories: String(tdee) }));
   }
 
-  function handleTdeeFill() {
-    const tdee = calcTDEE({ ...profile, ...tdeeForm });
-    updateProfile({
-      weightKg: tdeeForm.weightKg,
-      heightCm: tdeeForm.heightCm,
-      ageYears: tdeeForm.ageYears,
-      sex: tdeeForm.sex,
-      activityLevel: tdeeForm.activityLevel,
+  function handleSave() {
+    updateBodyStats({
+      weightKg: tdeeForm.weightKg ? Number(tdeeForm.weightKg) : undefined,
+      heightCm: tdeeForm.heightCm ? Number(tdeeForm.heightCm) : undefined,
+      ageYears: tdeeForm.ageYears ? Number(tdeeForm.ageYears) : undefined,
+      sex: tdeeForm.sex || undefined,
+      activityLevel: (tdeeForm.activityLevel || undefined) as ActivityLevel | undefined,
     });
-    setForm((f) => ({ ...f, calories: tdee }));
+    updateGoals({
+      calories: Number(form.calories),
+      protein: Number(form.protein),
+      carbs: Number(form.carbs),
+      fat: Number(form.fat),
+    });
   }
 
   return (
@@ -87,7 +104,7 @@ export function GoalSettingsSheet({ children }: Props) {
                 type="number"
                 min={0}
                 value={form[key]}
-                onChange={(e) => setForm((f) => ({ ...f, [key]: Number(e.target.value) }))}
+              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                 className="input-dark"
               />
             </div>
@@ -124,9 +141,9 @@ export function GoalSettingsSheet({ children }: Props) {
                   <input
                     type="number"
                     min={0}
-                    value={tdeeForm[key as keyof typeof tdeeForm] as number}
+                    value={tdeeForm[key as keyof typeof tdeeForm] as string}
                     onChange={(e) =>
-                      setTdeeForm((f) => ({ ...f, [key]: Number(e.target.value) }))
+                      setTdeeForm((f) => ({ ...f, [key]: e.target.value }))
                     }
                     className="input-dark"
                   />
@@ -138,10 +155,11 @@ export function GoalSettingsSheet({ children }: Props) {
                 <select
                   value={tdeeForm.sex}
                   onChange={(e) =>
-                    setTdeeForm((f) => ({ ...f, sex: e.target.value as UserProfile['sex'] }))
+                    setTdeeForm((f) => ({ ...f, sex: e.target.value as BodyStats['sex'] }))
                   }
                   className="input-dark"
                 >
+                  <option value="">Select…</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                   <option value="other">Other</option>
@@ -157,6 +175,7 @@ export function GoalSettingsSheet({ children }: Props) {
                   }
                   className="input-dark"
                 >
+                  <option value="">Select…</option>
                   {ACTIVITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}

@@ -4,7 +4,7 @@ import { useMounted } from "@/hooks/useMounted";
 
 interface Props {
   consumed: number;
-  goal: number;
+  goal?: number;
 }
 
 const SIZE = 224;
@@ -16,9 +16,10 @@ const C = 2 * Math.PI * R;
 
 export function CalorieSummaryRing({ consumed, goal }: Props) {
   const mounted = useMounted();
-  const remaining = Math.max(0, goal - consumed);
-  const overBudget = consumed > goal;
-  const progress = Math.min(consumed / Math.max(goal, 1), 1);
+  const hasGoal = goal !== undefined && goal > 0;
+  const remaining = hasGoal ? Math.max(0, goal - consumed) : 0;
+  const overBudget = hasGoal && consumed > goal;
+  const progress = hasGoal ? Math.min(consumed / goal, 1) : 0;
   const offset = C * (1 - progress);
   const color = overBudget ? "#ef4444" : "#8b5cf6";
 
@@ -83,20 +84,22 @@ export function CalorieSummaryRing({ consumed, goal }: Props) {
           >
             {consumed}
           </span>
-          <span className="text-sm text-slate-400">/ {goal} kcal</span>
+          <span className="text-sm text-slate-400">{hasGoal ? `/ ${goal} kcal` : "kcal"}</span>
         </div>
       </div>
 
       {/* Badge */}
-      <span
-        className={
-          overBudget
-            ? "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-widest"
-            : "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-widest"
-        }
-      >
-        {overBudget ? "Over" : "Remaining"}&nbsp;{overBudget ? consumed - goal : remaining} kcal
-      </span>
+      {hasGoal && (
+        <span
+          className={
+            overBudget
+              ? "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-widest"
+              : "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-widest"
+          }
+        >
+          {overBudget ? "Over" : "Remaining"}&nbsp;{overBudget ? consumed - goal : remaining} kcal
+        </span>
+      )}
     </div>
   );
 }

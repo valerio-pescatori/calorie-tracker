@@ -5,7 +5,7 @@ import type { MacroTotals } from "@/types";
 
 interface Props {
   totals: MacroTotals;
-  goals: MacroTotals;
+  goals: MacroTotals | null;
 }
 
 interface MacroStyle {
@@ -23,7 +23,7 @@ interface MacroConfig extends MacroStyle {
 
 interface MacroRingProps extends MacroStyle {
   grams: number;
-  goal: number;
+  goal: number | null;
   pct: number;
 }
 
@@ -63,10 +63,11 @@ const SIZE = 72;
 const CX = SIZE / 2;
 
 function MacroRing({ grams, goal, strokeClass, trackClass, borderClass, textClass, label, pct }: MacroRingProps) {
-  const progress = goal > 0 ? Math.min(grams / goal, 1) : 0;
+  const hasGoal = goal !== null && goal > 0;
+  const progress = hasGoal ? Math.min(grams / goal, 1) : 0;
   const dash = progress * C;
   const gap = C - dash;
-  const over = grams > goal;
+  const over = hasGoal && grams > goal;
 
   return (
     <div className={`glass-card flex flex-col items-center gap-2 p-3 ${borderClass}`}>
@@ -75,16 +76,18 @@ function MacroRing({ grams, goal, strokeClass, trackClass, borderClass, textClas
           {/* Track */}
           <circle cx={CX} cy={CX} r={R} fill="none" strokeWidth={5} className={trackClass} />
           {/* Progress */}
-          <circle
-            cx={CX}
-            cy={CX}
-            r={R}
-            fill="none"
-            strokeWidth={5}
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${gap}`}
-            className={over ? "stroke-red-400" : strokeClass}
-          />
+          {hasGoal && (
+            <circle
+              cx={CX}
+              cy={CX}
+              r={R}
+              fill="none"
+              strokeWidth={5}
+              strokeLinecap="round"
+              strokeDasharray={`${dash} ${gap}`}
+              className={over ? "stroke-red-400" : strokeClass}
+            />
+          )}
         </svg>
         {/* Center label */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -96,7 +99,7 @@ function MacroRing({ grams, goal, strokeClass, trackClass, borderClass, textClas
 
       <div className="text-center">
         <p className="text-[10px] font-bold tracking-wider text-muted-foreground">{label}</p>
-        <p className={`text-xs font-semibold ${textClass}`}>{pct}%</p>
+        {hasGoal && <p className={`text-xs font-semibold ${textClass}`}>{pct}%</p>}
       </div>
     </div>
   );
@@ -126,7 +129,7 @@ export function MacroMiniCards({ totals, goals }: Props) {
             key={key}
             {...macroProps}
             grams={grams}
-            goal={goals[key]}
+            goal={goals?.[key] ?? null}
             pct={pct}
           />
         );

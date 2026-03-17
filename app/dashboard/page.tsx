@@ -19,7 +19,8 @@ const EMPTY_MEALS: [] = [];
 export default function DashboardPage() {
   const key = new Date().toISOString().slice(0, 10);
   const meals = useStore((s) => s.logs[key]?.meals ?? EMPTY_MEALS);
-  const goals = useStore((s) => s.profile.goals);
+  const goals = useStore((s) => s.goals);
+  const profileExists = useStore((s) => s.profileExists);
   const totals = useMemo(() => computeTotals(meals), [meals]);
 
   const hydrateForDate = useStore((s) => s.hydrateForDate);
@@ -71,16 +72,21 @@ export default function DashboardPage() {
           </div>
         </div>
         <GoalSettingsSheet>
-          <Button variant="ghost" size="icon" aria-label="Open goal settings">
-            <Settings className="h-5 w-5 text-muted-foreground" />
-          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" aria-label="Open goal settings">
+              <Settings className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            {profileExists === false && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-orange-400 pointer-events-none" />
+            )}
+          </div>
         </GoalSettingsSheet>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
         {/* Large calorie ring — centered */}
         <div className="flex justify-center">
-          <CalorieSummaryRing consumed={totals.calories} goal={goals.calories} />
+          <CalorieSummaryRing consumed={totals.calories} goal={goals?.calories} />
         </div>
 
         {/* Macro mini cards */}
