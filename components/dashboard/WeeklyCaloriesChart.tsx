@@ -1,19 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
-import { computeTotals } from "@/lib/nutrition";
-
-function getDateRange(daysAgo: number, count: number): string[] {
-  const result: string[] = [];
-  const today = new Date();
-  for (let i = daysAgo + count - 1; i >= daysAgo; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    result.push(d.toISOString().slice(0, 10));
-  }
-  return result;
-}
+import type { WeeklyDay } from "@/app/api/stats/weekly/route";
 
 /** Convert points to a Catmull-Rom SVG path for smooth curves */
 function catmullRomPath(pts: { x: number; y: number }[]): string {
@@ -35,25 +24,22 @@ function catmullRomPath(pts: { x: number; y: number }[]): string {
 }
 
 export function WeeklyCaloriesChart() {
-  const thisWeekDays = useMemo(() => getDateRange(0, 7), []);
-  const prevWeekDays = useMemo(() => getDateRange(7, 7), []);
-  const allDays = useMemo(() => [...prevWeekDays, ...thisWeekDays], [prevWeekDays, thisWeekDays]);
-
-  const hydrateForDate = useStore((s) => s.hydrateForDate);
-  const logs = useStore((s) => s.logs);
   const goal = useStore((s) => s.goals?.calories ?? null);
   const today = new Date().toISOString().slice(0, 10);
+  const [weekData, setWeekData] = useState<WeeklyDay[]>([]);
 
   useEffect(() => {
-    allDays.forEach((d) => hydrateForDate(d));
-  }, [allDays, hydrateForDate]);
+    fetch("/api/stats/weekly")
+      .then((r) => r.json())
+      .then(({ data }: { data: WeeklyDay[] }) => setWeekData(data))
+      .catch(() => {});
+  }, []);
 
-  const thisWeekData = thisWeekDays.map((date) => {
-    const meals = logs[date]?.meals ?? [];
-    const calories = computeTotals(meals).calories;
-    const dayOfWeek = new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
-    return { date, calories, dayOfWeek, isToday: date === today };
-  });
+  const thisWeekData = weekData.map((entry) => ({
+    ...entry,
+    dayOfWeek: new Date(entry.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" }),
+    isToday: entry.date === today,
+  }));
 
   const W = 280;
   const H = 130;
