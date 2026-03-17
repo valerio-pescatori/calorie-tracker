@@ -7,6 +7,7 @@ import {
   timestamp,
   date,
   pgEnum,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -55,14 +56,14 @@ export const mealEntries = pgTable("meal_entries", {
   timestamp: timestamp("timestamp", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
-export const userGoals = pgTable("user_goals", {
+export const userProfile = pgTable("user_profile", {
   userId: uuid("user_id").primaryKey(),
-  calories: integer("calories").notNull().default(2000),
-  protein: real("protein").notNull().default(150),
-  carbs: real("carbs").notNull().default(200),
-  fat: real("fat").notNull().default(65),
+  calories: integer("calories").notNull(),
+  protein: real("protein").notNull(),
+  carbs: real("carbs").notNull(),
+  fat: real("fat").notNull(),
   weightKg: real("weight_kg"),
   heightCm: real("height_cm"),
   ageYears: integer("age_years"),
@@ -71,4 +72,12 @@ export const userGoals = pgTable("user_goals", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
+
+export const userMeta = pgTable("user_meta", {
+  userId: uuid("user_id").primaryKey(),
+  onboardingSeen: boolean("onboarding_seen").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();
