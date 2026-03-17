@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { MealEntry, DailyLog, MacroTotals, UserProfile } from "@/types";
+import type { MealEntry, DailyLog, MacroTotals, BodyStats } from "@/types";
 import { computeTotals } from "./nutrition";
 import { todayKey } from "./date";
 
@@ -10,18 +10,21 @@ function emptyLog(date: string): DailyLog {
 interface Store {
   /** Daily logs keyed by date (YYYY-MM-DD) */
   logs: Record<string, DailyLog>;
-  profile: UserProfile;
+  goals: MacroTotals | null;
+  bodyStats: BodyStats;
   /** Dates whose meals have already been fetched from the server */
   hydratedDates: Set<string>;
   profileHydrated: boolean;
+  /** null = unknown (not yet fetched), false = no row in DB, true = row exists */
+  profileExists: boolean | null;
 }
 
 interface Actions {
   addMeal: (entry: Omit<MealEntry, "id" | "timestamp">, date?: string) => Promise<void>;
   removeMeal: (id: string, date?: string) => Promise<void>;
   updateMeal: (id: string, patch: Partial<Omit<MealEntry, "id">>, date?: string) => Promise<void>;
-  updateGoals: (goals: Partial<MacroTotals>) => Promise<void>;
-  updateProfile: (patch: Partial<Omit<UserProfile, "goals">>) => Promise<void>;
+  updateGoals: (goals: MacroTotals) => Promise<void>;
+  updateBodyStats: (stats: Partial<BodyStats>) => Promise<void>;
   /** Load meals for a date from the server (no-op if already loaded) */
   hydrateForDate: (date: string) => Promise<void>;
   /** Load profile/goals from the server (no-op if already loaded) */
@@ -34,10 +37,10 @@ export const useStore = create<StoreState>()((set, get) => ({
   logs: {},
   hydratedDates: new Set(),
   profileHydrated: false,
+  profileExists: null,
 
-  profile: {
-    goals: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
-  },
+  goals: null,
+  bodyStats: {},
 
   // ─── Hydration ─────────────────────────────────────────────────────────────
 
@@ -64,15 +67,22 @@ export const useStore = create<StoreState>()((set, get) => ({
     if (!res.ok) return;
 
     const { profile } = await res.json();
+
+    if (!profile) {
+      set({ profileHydrated: true, profileExists: false });
+      return;
+    }
+
     set({
       profileHydrated: true,
-      profile: {
-        goals: {
-          calories: profile.calories,
-          protein: profile.protein,
-          carbs: profile.carbs,
-          fat: profile.fat,
-        },
+      profileExists: true,
+      goals: {
+        calories: profile.calories,
+        protein: profile.protein,
+        carbs: profile.carbs,
+        fat: profile.fat,
+      },
+      bodyStats: {
         weightKg: profile.weightKg ?? undefined,
         heightCm: profile.heightCm ?? undefined,
         ageYears: profile.ageYears ?? undefined,
@@ -194,48 +204,39 @@ export const useStore = create<StoreState>()((set, get) => ({
   },
 
   updateGoals: async (goals) => {
-    const prevProfile = get().profile;
+    const prevGoals = get().goals;
 
     // Optimistic
-    set((state) => ({
-      profile: { ...state.profile, goals: { ...state.profile.goals, ...goals } },
-    }));
+    set({ goals });
 
     try {
-      const res = await fetch("/api/profile", {
+      const res = await fetch("/api/profile/goals", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(goals),
       });
       if (!res.ok) throw new Error("Failed to update goals");
+      set({ profileExists: true });
     } catch {
-      set({ profile: prevProfile });
+      set({ goals: prevGoals });
     }
   },
 
-  updateProfile: async (patch) => {
-    const prevProfile = get().profile;
+  updateBodyStats: async (stats) => {
+    const prevBodyStats = get().bodyStats;
 
     // Optimistic
-    set((state) => ({ profile: { ...state.profile, ...patch } }));
+    set((state) => ({ bodyStats: { ...state.bodyStats, ...stats } }));
 
     try {
-      // Map from UserProfile shape to API shape
-      const apiPatch: Record<string, unknown> = {};
-      if (patch.weightKg !== undefined) apiPatch.weightKg = patch.weightKg;
-      if (patch.heightCm !== undefined) apiPatch.heightCm = patch.heightCm;
-      if (patch.ageYears !== undefined) apiPatch.ageYears = patch.ageYears;
-      if (patch.sex !== undefined) apiPatch.sex = patch.sex;
-      if (patch.activityLevel !== undefined) apiPatch.activityLevel = patch.activityLevel;
-
-      const res = await fetch("/api/profile", {
+      const res = await fetch("/api/profile/stats", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(apiPatch),
+        body: JSON.stringify(stats),
       });
-      if (!res.ok) throw new Error("Failed to update profile");
+      if (!res.ok) throw new Error("Failed to update body stats");
     } catch {
-      set({ profile: prevProfile });
+      set({ bodyStats: prevBodyStats });
     }
   },
 }));
