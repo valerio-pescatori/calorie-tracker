@@ -18,6 +18,7 @@ interface Store {
   profileHydrated: boolean;
   /** null = unknown (not yet fetched), false = no row in DB, true = row exists */
   profileExists: boolean | null;
+  isAddMealOpen: boolean;
 }
 
 interface Actions {
@@ -30,6 +31,7 @@ interface Actions {
   hydrateForDate: (date: string) => Promise<void>;
   /** Load profile/goals from the server (no-op if already loaded) */
   hydrateProfile: () => Promise<void>;
+  setAddMealOpen: (v: boolean) => void;
 }
 
 export type StoreState = Store & Actions;
@@ -42,6 +44,8 @@ export const useStore = create<StoreState>()((set, get) => ({
 
   goals: null,
   bodyStats: {},
+  isAddMealOpen: false,
+  setAddMealOpen: (v) => set({ isAddMealOpen: v }),
 
   // ─── Hydration ─────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
-import { I18nProvider } from "./i18n-provider";
+import { AppShell } from "@/components/AppShell";
 import { isLocale, baseLocale } from "@/lib/i18n/i18n-util";
 import en from "@/lib/i18n/en";
 import it from "@/lib/i18n/it";
@@ -48,7 +48,7 @@ export default async function RootLayout({
           <div className="aurora-blob aurora-blob-teal" />
           <div className="aurora-blob aurora-blob-indigo" />
         </div>
-        <I18nProvider>{children}</I18nProvider>
+        <AppShell locale={locale}>{children}</AppShell>
       </body>
     </html>
   );
