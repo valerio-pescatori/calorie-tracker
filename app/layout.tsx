@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
+    <html lang="en" className="overscroll-none">
+      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased `}>
         <div className="aurora-bg" aria-hidden="true">
           <div className="aurora-blob aurora-blob-violet" />
           <div className="aurora-blob aurora-blob-teal" />
