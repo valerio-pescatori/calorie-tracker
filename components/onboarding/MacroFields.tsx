@@ -3,6 +3,8 @@
 import { Input } from "@/components/ui/input";
 import type { MacroFormData } from "./types";
 import { MACRO_FIELDS } from "./types";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
+import { MacroTotals } from "@/types";
 
 interface Props {
   macros: MacroFormData;
@@ -14,6 +16,13 @@ const g = (s: string) => parseFloat(s) || 0;
 const fmt = (n: number) => String(Math.round(n * 10) / 10);
 
 export function MacroFields({ macros, onChange, showPlaceholders = false }: Props) {
+  const { LL } = useI18nContext();
+  const fieldLabels: Record<keyof MacroTotals, string> = {
+    calories: LL.common.calories(),
+    protein: LL.common.protein(),
+    carbs: LL.common.carbs(),
+    fat: LL.common.fat(),
+  };
   function handleChange(key: keyof MacroFormData, raw: string) {
     onChange((prev) => {
       if (key === "calories") {
@@ -21,9 +30,9 @@ export function MacroFields({ macros, onChange, showPlaceholders = false }: Prop
         const kcal = parseFloat(raw) || 0;
         return {
           calories: raw,
-          carbs: fmt(kcal * 0.4 / 4),
-          protein: fmt(kcal * 0.3 / 4),
-          fat: fmt(kcal * 0.3 / 9),
+          carbs: fmt((kcal * 0.4) / 4),
+          protein: fmt((kcal * 0.3) / 4),
+          fat: fmt((kcal * 0.3) / 9),
         };
       }
 
@@ -41,9 +50,9 @@ export function MacroFields({ macros, onChange, showPlaceholders = false }: Prop
 
   return (
     <div className="space-y-4">
-      {MACRO_FIELDS.map(({ key, label, unit, placeholder }) => (
+      {MACRO_FIELDS.map(({ key, unit, placeholder }) => (
         <div key={key} className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground/80">{label}</label>
+          <label className="text-sm font-medium text-foreground/80">{fieldLabels[key]}</label>
           <div className="relative">
             <Input
               type="number"

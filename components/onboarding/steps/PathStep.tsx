@@ -1,29 +1,20 @@
 import type { Step } from "../types";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 interface Props {
   onChoose: (next: Step) => void;
 }
 
-const OPTIONS = [
-  {
-    next: "body-stats" as Step,
-    title: "Guide me through it",
-    description: "We'll calculate your target based on your stats",
-  },
-  {
-    next: "direct" as Step,
-    title: "I know my numbers",
-    description: "Enter your calorie and macro targets directly",
-  },
-];
-
 export function PathStep({ onChoose }: Props) {
+  const { LL } = useI18nContext();
+  const OPTIONS = [
+    { next: "body-stats" as Step, title: LL.onboarding.pathGuideTitle(), description: LL.onboarding.pathGuideDesc() },
+    { next: "direct" as Step, title: LL.onboarding.pathDirectTitle(), description: LL.onboarding.pathDirectDesc() },
+  ];
   return (
     <div className="w-full space-y-6">
       <div className="text-center">
-        <h1 className="text-xl font-bold text-foreground">
-          How would you like to set your calorie target?
-        </h1>
+        <h1 className="text-xl font-bold text-foreground">{LL.onboarding.pathTitle()}</h1>
       </div>
       <div className="space-y-3">
         {OPTIONS.map(({ next, title, description }) => (

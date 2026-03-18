@@ -1,12 +1,7 @@
 import { TrendingDown, Minus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { WeightGoal } from "../types";
-
-const OPTIONS: { value: WeightGoal; label: string; description: string; Icon: React.ElementType }[] = [
-  { value: "lose", label: "Lose weight", description: "500 kcal below your maintenance level", Icon: TrendingDown },
-  { value: "maintain", label: "Maintain weight", description: "Stay at your maintenance calorie level", Icon: Minus },
-  { value: "gain", label: "Gain weight", description: "500 kcal above your maintenance level", Icon: TrendingUp },
-];
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 interface Props {
   weightGoal: WeightGoal;
@@ -15,11 +10,27 @@ interface Props {
 }
 
 export function WeightGoalStep({ weightGoal, setWeightGoal, onContinue }: Props) {
+  const { LL } = useI18nContext();
+  const OPTIONS: { value: WeightGoal; label: string; description: string; Icon: React.ElementType }[] = [
+    {
+      value: "lose",
+      label: LL.onboarding.loseWeight(),
+      description: LL.onboarding.loseWeightDesc(),
+      Icon: TrendingDown,
+    },
+    {
+      value: "maintain",
+      label: LL.onboarding.maintainWeight(),
+      description: LL.onboarding.maintainWeightDesc(),
+      Icon: Minus,
+    },
+    { value: "gain", label: LL.onboarding.gainWeight(), description: LL.onboarding.gainWeightDesc(), Icon: TrendingUp },
+  ];
   return (
     <div className="w-full space-y-6">
       <div className="text-center space-y-1">
-        <h1 className="text-xl font-bold text-foreground">Your goal</h1>
-        <p className="text-xs text-muted-foreground">What are you trying to achieve?</p>
+        <h1 className="text-xl font-bold text-foreground">{LL.onboarding.weightGoalTitle()}</h1>
+        <p className="text-xs text-muted-foreground">{LL.onboarding.weightGoalSubtitle()}</p>
       </div>
 
       <div className="space-y-2">
@@ -44,7 +55,7 @@ export function WeightGoalStep({ weightGoal, setWeightGoal, onContinue }: Props)
       </div>
 
       <Button className="w-full" size="lg" onClick={onContinue}>
-        Continue
+        {LL.common.continue()}
       </Button>
     </div>
   );
