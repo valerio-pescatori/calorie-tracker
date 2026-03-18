@@ -1,6 +1,6 @@
-export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-export type EntrySource = 'ai_voice' | 'ai_text' | 'manual' | 'search';
-export type Confidence = 'high' | 'medium' | 'low';
+export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
+export type EntrySource = "ai_voice" | "ai_text" | "manual" | "search";
+export type Confidence = "high" | "medium" | "low";
 
 export interface MealEntry extends MacroTotals {
   id: string;
@@ -12,11 +12,16 @@ export interface MealEntry extends MacroTotals {
   notes?: string;
 }
 
-export interface MacroTotals {
-  calories: number;
+export interface PCF {
   protein: number;
   carbs: number;
   fat: number;
+}
+
+export type PCFKeys = keyof PCF;
+
+export interface MacroTotals extends PCF {
+  calories: number;
 }
 
 export interface DailyLog {
@@ -24,17 +29,12 @@ export interface DailyLog {
   meals: MealEntry[];
 }
 
-export type ActivityLevel =
-  | 'sedentary'
-  | 'lightly_active'
-  | 'moderately_active'
-  | 'very_active'
-  | 'extra_active';
+export type ActivityLevel = "sedentary" | "lightly_active" | "moderately_active" | "very_active" | "extra_active";
 
 export interface BodyStats {
   weightKg?: number;
   heightCm?: number;
   ageYears?: number;
-  sex?: 'male' | 'female' | 'other';
+  sex?: "male" | "female" | "other";
   activityLevel?: ActivityLevel;
 }
