@@ -2,11 +2,13 @@
 
 import { SubmitEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const { LL } = useI18nContext();
 
   async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,26 +35,26 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Calorie Tracker</h1>
-          <p className="text-sm text-muted-foreground">Enter your email to receive a magic link</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{LL.login.title()}</h1>
+          <p className="text-sm text-muted-foreground">{LL.login.subtitle()}</p>
         </div>
 
         {status === "sent" ? (
           <div className="rounded-lg border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
-            Check your inbox — we sent a magic link to <span className="font-medium text-foreground">{email}</span>.
+            {LL.login.checkInbox()} <span className="font-medium text-foreground">{email}</span>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email address
+                {LL.login.emailLabel()}
               </label>
               <input
                 id="email"
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={LL.login.emailPlaceholder()}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
@@ -67,7 +69,7 @@ export default function LoginPage() {
               disabled={status === "loading"}
               className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
             >
-              {status === "loading" ? "Sending…" : "Send magic link"}
+              {status === "loading" ? LL.login.sending() : LL.login.sendLink()}
             </button>
           </form>
         )}

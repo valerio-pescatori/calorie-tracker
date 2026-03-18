@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { Settings } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 import { computeTotals } from "@/lib/nutrition";
 import { CalorieSummaryRing } from "@/components/dashboard/CalorieSummaryRing";
 import { MacroMiniCards } from "@/components/dashboard/MacroMiniCards";
@@ -28,6 +29,13 @@ export default function DashboardPage() {
 
   const [addMealOpen, setAddMealOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
+  const { LL, locale, setLocale } = useI18nContext();
+
+  function switchLocale(next: typeof locale) {
+    setLocale(next);
+    localStorage.setItem('locale', next);
+    document.cookie = `locale=${next};path=/;max-age=31536000`;
+  }
 
   useEffect(() => {
     hydrateForDate(key);
@@ -65,15 +73,34 @@ export default function DashboardPage() {
             {initials || "?"}
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Welcome back</p>
+            <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">{LL.dashboard.welcomeBack()}</p>
             <h1 className="text-base font-bold text-foreground leading-tight">
               {displayName || "…"}
             </h1>
           </div>
         </div>
-        <GoalSettingsSheet>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => switchLocale('en')}
+            className={`text-xs font-bold px-2 py-1 rounded transition-colors ${
+              locale === 'en' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            onClick={() => switchLocale('it')}
+            className={`text-xs font-bold px-2 py-1 rounded transition-colors ${
+              locale === 'it' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            IT
+          </button>
+          <GoalSettingsSheet>
           <div className="relative">
-            <Button variant="ghost" size="icon" aria-label="Open goal settings">
+            <Button variant="ghost" size="icon" aria-label={LL.goals.openSettings()}>
               <Settings className="h-5 w-5 text-muted-foreground" />
             </Button>
             {profileExists === false && (
@@ -81,6 +108,7 @@ export default function DashboardPage() {
             )}
           </div>
         </GoalSettingsSheet>
+        </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
@@ -98,7 +126,7 @@ export default function DashboardPage() {
         {/* Today's meals */}
         <div className="space-y-3">
           <h2 className="text-xs font-bold tracking-wider text-foreground/50 uppercase">
-            Today&apos;s Meals
+            {LL.dashboard.todaysMeals()}
           </h2>
           <MealTimeline meals={meals} />
         </div>
