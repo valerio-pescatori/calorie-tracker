@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { SubmitEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
     setErrorMsg("");
@@ -35,18 +33,13 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Calorie Tracker
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your email to receive a magic link
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Calorie Tracker</h1>
+          <p className="text-sm text-muted-foreground">Enter your email to receive a magic link</p>
         </div>
 
         {status === "sent" ? (
           <div className="rounded-lg border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
-            Check your inbox — we sent a magic link to{" "}
-            <span className="font-medium text-foreground">{email}</span>.
+            Check your inbox — we sent a magic link to <span className="font-medium text-foreground">{email}</span>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,9 +60,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {status === "error" && (
-              <p className="text-sm text-destructive">{errorMsg}</p>
-            )}
+            {status === "error" && <p className="text-sm text-destructive">{errorMsg}</p>}
 
             <button
               type="submit"
