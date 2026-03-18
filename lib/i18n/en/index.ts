@@ -159,6 +159,11 @@ const en = {
 		carbsPlaceholder: '200',
 		fatPlaceholder: '65',
 	},
+	profile: {
+		title: 'Profile',
+		updateGoals: 'Update goals & stats',
+		language: 'Language',
+	},
 } satisfies BaseTranslation
 
 export default en

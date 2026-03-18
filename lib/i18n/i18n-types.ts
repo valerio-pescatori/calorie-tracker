@@ -597,6 +597,20 @@ type RootTranslation = {
 		 */
 		fatPlaceholder: string
 	}
+	profile: {
+		/**
+		 * P​r​o​f​i​l​e
+		 */
+		title: string
+		/**
+		 * U​p​d​a​t​e​ ​g​o​a​l​s​ ​&​ ​s​t​a​t​s
+		 */
+		updateGoals: string
+		/**
+		 * L​a​n​g​u​a​g​e
+		 */
+		language: string
+	}
 }
 
 export type TranslationFunctions = {
@@ -1177,6 +1191,20 @@ export type TranslationFunctions = {
 		 * 65
 		 */
 		fatPlaceholder: () => LocalizedString
+	}
+	profile: {
+		/**
+		 * Profile
+		 */
+		title: () => LocalizedString
+		/**
+		 * Update goals & stats
+		 */
+		updateGoals: () => LocalizedString
+		/**
+		 * Language
+		 */
+		language: () => LocalizedString
 	}
 }
 

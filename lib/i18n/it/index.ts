@@ -159,6 +159,11 @@ const it = {
 		carbsPlaceholder: '200',
 		fatPlaceholder: '65',
 	},
+	profile: {
+		title: 'Profilo',
+		updateGoals: 'Aggiorna obiettivi e dati',
+		language: 'Lingua',
+	},
 } satisfies Translation
 
 export default it
