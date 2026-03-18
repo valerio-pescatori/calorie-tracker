@@ -15,9 +15,9 @@ import { WeightGoalStep } from "./steps/WeightGoalStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { DirectStep } from "./steps/DirectStep";
 
-export function OnboardingFlow() {
+export function OnboardingFlow({ initialStep }: { initialStep?: Step } = {}) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("welcome");
+  const [step, setStep] = useState<Step>(initialStep ?? "welcome");
   const [body, setBody] = useState<BodyFormData>({ weightKg: "", heightCm: "", ageYears: "", sex: "male" });
   const [activity, setActivity] = useState<ActivityLevel>("moderately_active");
   const [weightGoal, setWeightGoal] = useState<WeightGoal>("maintain");
@@ -113,7 +113,13 @@ export function OnboardingFlow() {
     <div className="relative min-h-dvh flex flex-col">
       {prevStep && (
         <button
-          onClick={() => setStep(prevStep)}
+          onClick={() => {
+            if (step === initialStep) {
+              router.back();
+            } else {
+              setStep(prevStep);
+            }
+          }}
           className="absolute top-5 left-4 p-1 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Go back"
         >
