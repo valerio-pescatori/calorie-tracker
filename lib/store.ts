@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { MealEntry, DailyLog, MacroTotals, BodyStats } from "@/types";
 import { computeTotals } from "./nutrition";
+import { v4 as uuidv4 } from "uuid";
 import { todayKey } from "./date";
 
 function emptyLog(date: string): DailyLog {
@@ -98,7 +99,7 @@ export const useStore = create<StoreState>()((set, get) => ({
     const key = date ?? todayKey();
 
     // Optimistic update
-    const tempId = crypto.randomUUID();
+    const tempId = uuidv4();
     const newMeal: MealEntry = {
       ...entry,
       id: tempId,
@@ -242,9 +243,9 @@ export const useStore = create<StoreState>()((set, get) => ({
 }));
 
 // Selectors — derive totals from meals rather than storing redundant data
-export const selectTodayTotals = (state: StoreState): MacroTotals =>
-  computeTotals(state.logs[todayKey()]?.meals ?? []);
+export const selectTodayTotals = (state: StoreState): MacroTotals => computeTotals(state.logs[todayKey()]?.meals ?? []);
 
-export const selectTotalsForDate = (date: string) => (state: StoreState): MacroTotals =>
-  computeTotals(state.logs[date]?.meals ?? []);
-
+export const selectTotalsForDate =
+  (date: string) =>
+  (state: StoreState): MacroTotals =>
+    computeTotals(state.logs[date]?.meals ?? []);
