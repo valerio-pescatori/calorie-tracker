@@ -7,7 +7,3 @@ we have to refactor the sidebar (the one that appears when clicking on the cog i
 
 --------------------------------------------
 
-adding i18n
-
-add i18n with next-i18n or typesafe-i18n, replace ALL labels in .tsx files with labels from the i18n library.
-Make sure we support two languages: English and Italian
