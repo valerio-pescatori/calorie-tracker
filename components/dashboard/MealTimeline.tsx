@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { MealEntry, MealType } from "@/types";
 import { Apple, Moon, Scale, Sun } from "lucide-react";
 import { type ComponentType } from "react";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 interface Props {
   meals: MealEntry[];
@@ -11,20 +12,26 @@ interface Props {
 
 interface MealSection {
   type: MealType;
-  label: string;
   icon: ComponentType<{ size?: number; className?: string }>;
   bg: string;
   text: string;
 }
 
 const MEAL_SECTIONS: MealSection[] = [
-  { type: "breakfast", label: "Breakfast", icon: Sun, bg: "bg-violet-500/20", text: "text-violet-500" },
-  { type: "lunch", label: "Lunch", icon: Scale, bg: "bg-teal-500/20", text: "text-teal-500" },
-  { type: "dinner", label: "Dinner", icon: Moon, bg: "bg-indigo-500/20", text: "text-indigo-500" },
-  { type: "snack", label: "Snacks", icon: Apple, bg: "bg-amber-500/20", text: "text-amber-500" },
+  { type: "breakfast", icon: Sun, bg: "bg-violet-500/20", text: "text-violet-500" },
+  { type: "lunch", icon: Scale, bg: "bg-teal-500/20", text: "text-teal-500" },
+  { type: "dinner", icon: Moon, bg: "bg-indigo-500/20", text: "text-indigo-500" },
+  { type: "snack", icon: Apple, bg: "bg-amber-500/20", text: "text-amber-500" },
 ];
 
 export function MealTimeline({ meals }: Props) {
+  const { LL } = useI18nContext();
+  const sectionLabels: Record<MealType, string> = {
+    breakfast: LL.common.breakfast(),
+    lunch: LL.common.lunch(),
+    dinner: LL.common.dinner(),
+    snack: LL.common.snacks(),
+  };
   const grouped = new Map<MealType, MealEntry[]>();
   for (const meal of meals) {
     const group = grouped.get(meal.mealType) ?? [];
@@ -35,12 +42,12 @@ export function MealTimeline({ meals }: Props) {
   const sections = MEAL_SECTIONS.filter(({ type }) => (grouped.get(type)?.length ?? 0) > 0);
 
   if (sections.length === 0) {
-    return <p className="text-xs text-foreground/30 text-center py-4">No meals logged yet — tap + to add one</p>;
+    return <p className="text-xs text-foreground/30 text-center py-4">{LL.dashboard.noMeals()}</p>;
   }
 
   return (
     <div className="space-y-3">
-      {sections.map(({ type, label, icon: Icon, bg, text }) => {
+      {sections.map(({ type, icon: Icon, bg, text }) => {
         const group = grouped.get(type)!;
         const sectionKcal = group.reduce((s, m) => s + m.calories, 0);
         const description = group.map((m) => m.name).join(", ");
@@ -54,13 +61,13 @@ export function MealTimeline({ meals }: Props) {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">{label}</p>
+              <p className="text-sm font-semibold text-foreground">{sectionLabels[type]}</p>
               <p className="text-xs text-muted-foreground truncate">{description}</p>
             </div>
 
             {/* Kcal */}
             <span className="text-sm font-bold text-foreground tabular-nums shrink-0">
-              {sectionKcal} <span className="text-xs font-normal text-muted-foreground">kcal</span>
+              {sectionKcal} <span className="text-xs font-normal text-muted-foreground">{LL.common.kcal()}</span>
             </span>
           </div>
         );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMounted } from "@/hooks/useMounted";
-import type { MacroTotals } from "@/types";
+import type { MacroTotals, PCFKeys } from "@/types";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 interface Props {
   totals: MacroTotals;
@@ -17,7 +18,7 @@ interface MacroStyle {
 }
 
 interface MacroConfig extends MacroStyle {
-  key: keyof MacroTotals;
+  key: PCFKeys;
   kcalFactor: number;
 }
 
@@ -107,6 +108,12 @@ function MacroRing({ grams, goal, strokeClass, trackClass, borderClass, textClas
 
 export function MacroMiniCards({ totals, goals }: Props) {
   const mounted = useMounted();
+  const { LL } = useI18nContext();
+  const macroLabels: Record<PCFKeys, string> = {
+    protein: LL.common.protein().toUpperCase(),
+    carbs: LL.common.carbs().toUpperCase(),
+    fat: LL.common.fats().toUpperCase(),
+  };
   const totalKcal = totals.protein * 4 + totals.carbs * 4 + totals.fat * 9;
 
   if (!mounted) {
@@ -128,6 +135,7 @@ export function MacroMiniCards({ totals, goals }: Props) {
           <MacroRing
             key={key}
             {...macroProps}
+            label={macroLabels[key]}
             grams={grams}
             goal={goals?.[key] ?? null}
             pct={pct}

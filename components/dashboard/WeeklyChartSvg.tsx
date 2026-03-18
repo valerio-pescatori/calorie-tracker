@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 const PAD = { top: 36, right: 12, bottom: 28, left: 8 };
 const CHART_HEIGHT = 140;
@@ -38,6 +39,7 @@ export function WeeklyChartSvg({ entries, goal }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [W, setW] = useState(0);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const { LL } = useI18nContext();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -75,7 +77,7 @@ export function WeeklyChartSvg({ entries, goal }: Props) {
           width={W}
           height={H}
           className="block"
-          aria-label="7-day calorie history line chart"
+          aria-label={LL.dashboard.chartAriaLabel()}
           onMouseLeave={() => setActiveIdx(null)}
         >
           <defs>
@@ -98,7 +100,7 @@ export function WeeklyChartSvg({ entries, goal }: Props) {
           {goal !== null && goalY !== null && (
             <>
               <line x1={PAD.left} y1={goalY} x2={PAD.left + innerW} y2={goalY} stroke="rgba(139,92,246,0.25)" strokeDasharray="4 3" strokeWidth={1} />
-              <text x={PAD.left} y={goalY - 4} textAnchor="start" fontSize={10} fontWeight="600" fill="rgba(139,92,246,0.5)">{goal} kcal</text>
+              <text x={PAD.left} y={goalY - 4} textAnchor="start" fontSize={10} fontWeight="600" fill="rgba(139,92,246,0.5)">{goal} {LL.common.kcal()}</text>
             </>
           )}
 
@@ -134,7 +136,7 @@ export function WeeklyChartSvg({ entries, goal }: Props) {
               <g style={{ pointerEvents: "none" }}>
                 <rect x={tx} y={ty} width={TW} height={TH} rx={5} fill="oklch(0.16 0.018 285)" stroke="rgba(139,92,246,0.45)" strokeWidth={0.75} />
                 <text x={tx + TW / 2} y={ty + 9} textAnchor="middle" fontSize={9} fill="oklch(0.55 0.025 285)">{pt.dayOfWeek}</text>
-                <text x={tx + TW / 2} y={ty + 20} textAnchor="middle" fontSize={10.5} fontWeight="700" fill="oklch(0.92 0.008 285)">{pt.calories} kcal</text>
+                <text x={tx + TW / 2} y={ty + 20} textAnchor="middle" fontSize={10.5} fontWeight="700" fill="oklch(0.92 0.008 285)">{pt.calories} {LL.common.kcal()}</text>
               </g>
             );
           })()}

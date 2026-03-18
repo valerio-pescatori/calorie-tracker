@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useStore } from '@/lib/store';
+import { useI18nContext } from '@/lib/i18n/i18n-react';
 import type { MealEntry, MealType, Confidence } from '@/types';
 
 type Tab = 'text' | 'voice' | 'manual';
@@ -35,19 +36,20 @@ interface ConfirmCardProps {
 
 function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
   const [form, setForm] = useState({ ...parsed, mealType: 'lunch' as MealType });
+  const { LL } = useI18nContext();
   const f = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((v) => ({ ...v, [key]: key === 'name' ? e.target.value : Number(e.target.value) }));
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground">Review estimate</h3>
+        <h3 className="font-semibold text-foreground">{LL.addMeal.reviewEstimate()}</h3>
         <button onClick={onCancel}><X className="h-4 w-4 text-muted-foreground" /></button>
       </div>
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Meal name</label>
+          <label className="text-xs font-medium text-muted-foreground">{LL.addMeal.mealName()}</label>
           <input
             value={form.name}
             onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))}
@@ -58,10 +60,10 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
         <div className="grid grid-cols-2 gap-3">
           {(
             [
-              { key: 'calories', label: 'Calories (kcal)' },
-              { key: 'protein',  label: 'Protein (g)' },
-              { key: 'carbs',    label: 'Carbs (g)' },
-              { key: 'fat',      label: 'Fat (g)' },
+              { key: 'calories', label: LL.goals.caloriesKcal() },
+              { key: 'protein',  label: LL.goals.proteinG() },
+              { key: 'carbs',    label: LL.goals.carbsG() },
+              { key: 'fat',      label: LL.goals.fatG() },
             ] as { key: keyof ParsedMeal; label: string }[]
           ).map(({ key, label }) => (
             <div key={key} className="space-y-1">
@@ -78,23 +80,23 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Meal type</label>
+          <label className="text-xs font-medium text-muted-foreground">{LL.addMeal.mealType()}</label>
           <select
             value={form.mealType}
             onChange={(e) => setForm((v) => ({ ...v, mealType: e.target.value as MealType }))}
             className="input-dark"
           >
-            <option value="breakfast">Breakfast</option>
-            <option value="lunch">Lunch</option>
-            <option value="dinner">Dinner</option>
-            <option value="snack">Snack</option>
+            <option value="breakfast">{LL.common.breakfast()}</option>
+            <option value="lunch">{LL.common.lunch()}</option>
+            <option value="dinner">{LL.common.dinner()}</option>
+            <option value="snack">{LL.common.snack()}</option>
           </select>
         </div>
 
         {form.confidence !== 'high' && (
           <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 space-y-1">
             <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400">
-              {form.confidence === 'low' ? '⚠ Low confidence' : 'Medium confidence'}
+              {form.confidence === 'low' ? LL.addMeal.lowConfidence() : LL.addMeal.mediumConfidence()}
             </Badge>
             {form.notes && <p className="text-xs text-amber-400/80 italic">&ldquo;{form.notes}&rdquo;</p>}
           </div>
@@ -102,9 +104,9 @@ function MealConfirmCard({ parsed, onConfirm, onCancel }: ConfirmCardProps) {
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button variant="outline" className="flex-1" onClick={onCancel}>Cancel</Button>
+        <Button variant="outline" className="flex-1" onClick={onCancel}>{LL.common.cancel()}</Button>
         <Button className="flex-1" onClick={() => onConfirm(form)}>
-          <CheckCircle2 className="h-4 w-4 mr-1" /> Add meal
+          <CheckCircle2 className="h-4 w-4 mr-1" /> {LL.addMeal.addMeal()}
         </Button>
       </div>
     </div>
@@ -117,6 +119,7 @@ function TextInput({ onParsed }: { onParsed: (meal: ParsedMeal) => void }) {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { LL } = useI18nContext();
 
   async function handleSubmit() {
     if (!description.trim()) return;
@@ -132,7 +135,7 @@ function TextInput({ onParsed }: { onParsed: (meal: ParsedMeal) => void }) {
       const data = await res.json();
       onParsed(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to parse meal. Please try again.');
+      setError(e instanceof Error ? e.message : LL.addMeal.failedToParse());
     } finally {
       setLoading(false);
     }
@@ -142,15 +145,15 @@ function TextInput({ onParsed }: { onParsed: (meal: ParsedMeal) => void }) {
     <div className="space-y-3">
       <textarea
         rows={4}
-        placeholder="Describe what you ate… e.g. 'A bowl of pasta bolognese with parmesan and a glass of red wine'"
+      placeholder={LL.addMeal.textPlaceholder()}
         value={description}
         onChange={(e) => setDescription(e.target.value.slice(0, 500))}
         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{description.length}/500</span>
+        <span className="text-xs text-muted-foreground">{LL.addMeal.charCount({ count: description.length })}</span>
         <Button size="sm" disabled={!description.trim() || loading} onClick={handleSubmit}>
-          {loading ? 'Analysing…' : <><Send className="h-4 w-4 mr-1" /> Analyse</>}
+          {loading ? LL.addMeal.analysing() : <><Send className="h-4 w-4 mr-1" /> {LL.addMeal.analyse()}</>}
         </Button>
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -165,13 +168,14 @@ function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) 
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState('');
   const recognitionRef = useRef<unknown>(null);
+  const { LL } = useI18nContext();
 
   function startRecording() {
     setError('');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
     if (!SR) {
-      setError('Voice input is not supported in this browser. Please use the text input instead.');
+      setError(LL.addMeal.voiceNotSupported());
       return;
     }
     const recognition = new SR();
@@ -212,7 +216,7 @@ function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) 
           ? <MicOff className="h-8 w-8 text-white" />
           : <Mic className="h-8 w-8 text-white" />}
       </button>
-      <p className="text-sm text-muted-foreground">{recording ? 'Listening… tap to stop' : 'Tap to start recording'}</p>
+      <p className="text-sm text-muted-foreground">{recording ? LL.addMeal.listening() : LL.addMeal.tapToRecord()}</p>
 
       {transcript && (
         <div className="w-full rounded-lg bg-white/5 border border-white/10 p-3 text-sm text-foreground/80 italic">
@@ -223,7 +227,7 @@ function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) 
 
       {transcript && !recording && (
         <Button className="w-full" onClick={() => onTranscript(transcript)}>
-          <Send className="h-4 w-4 mr-1" /> Analyse this meal
+          <Send className="h-4 w-4 mr-1" /> {LL.addMeal.analyseThisMeal()}
         </Button>
       )}
     </div>
@@ -239,6 +243,13 @@ interface ManualInputProps {
 function ManualInput({ onAdd }: ManualInputProps) {
   const empty = { name: '', calories: 0, protein: 0, carbs: 0, fat: 0, mealType: 'lunch' as MealType };
   const [form, setForm] = useState(empty);
+  const { LL } = useI18nContext();
+  const fieldLabels: Record<string, string> = {
+    calories: LL.goals.caloriesKcal(),
+    protein: LL.goals.proteinG(),
+    carbs: LL.goals.carbsG(),
+    fat: LL.goals.fatG(),
+  };
 
   function handleSubmit() {
     if (!form.name.trim() || form.calories <= 0) return;
@@ -249,9 +260,9 @@ function ManualInput({ onAdd }: ManualInputProps) {
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-500">Meal name</label>
+        <label className="text-xs font-medium text-zinc-500">{LL.addMeal.mealName()}</label>
         <input
-          placeholder="e.g. Chicken salad"
+          placeholder={LL.addMeal.mealNamePlaceholder()}
           value={form.name}
           onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))}
           className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -260,8 +271,8 @@ function ManualInput({ onAdd }: ManualInputProps) {
       <div className="grid grid-cols-2 gap-3">
         {(['calories', 'protein', 'carbs', 'fat'] as const).map((key) => (
           <div key={key} className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500 capitalize">
-              {key === 'calories' ? 'Calories (kcal)' : `${key.charAt(0).toUpperCase() + key.slice(1)} (g)`}
+            <label className="text-xs font-medium text-zinc-500">
+              {fieldLabels[key]}
             </label>
             <input
               type="number"
@@ -274,20 +285,20 @@ function ManualInput({ onAdd }: ManualInputProps) {
         ))}
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-500">Meal type</label>
+        <label className="text-xs font-medium text-zinc-500">{LL.addMeal.mealType()}</label>
         <select
           value={form.mealType}
           onChange={(e) => setForm((v) => ({ ...v, mealType: e.target.value as MealType }))}
           className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
         >
-          <option value="breakfast">Breakfast</option>
-          <option value="lunch">Lunch</option>
-          <option value="dinner">Dinner</option>
-          <option value="snack">Snack</option>
+          <option value="breakfast">{LL.common.breakfast()}</option>
+          <option value="lunch">{LL.common.lunch()}</option>
+          <option value="dinner">{LL.common.dinner()}</option>
+          <option value="snack">{LL.common.snack()}</option>
         </select>
       </div>
       <Button className="w-full" disabled={!form.name.trim() || form.calories <= 0} onClick={handleSubmit}>
-        <Plus className="h-4 w-4 mr-1" /> Add meal
+        <Plus className="h-4 w-4 mr-1" /> {LL.addMeal.addMeal()}
       </Button>
     </div>
   );
@@ -351,10 +362,11 @@ export function AddMealPanel({ open: controlledOpen, onOpenChange }: AddMealPane
     setOpen(false);
   }
 
+  const { LL } = useI18nContext();
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'text',   label: 'AI Text',  icon: <PenLine className="h-4 w-4" /> },
-    { id: 'voice',  label: 'AI Voice', icon: <Mic className="h-4 w-4" /> },
-    { id: 'manual', label: 'Manual',   icon: <Search className="h-4 w-4" /> },
+    { id: 'text',   label: LL.addMeal.tabText(),  icon: <PenLine className="h-4 w-4" /> },
+    { id: 'voice',  label: LL.addMeal.tabVoice(), icon: <Mic className="h-4 w-4" /> },
+    { id: 'manual', label: LL.addMeal.tabManual(), icon: <Search className="h-4 w-4" /> },
   ];
 
   return (
@@ -362,7 +374,7 @@ export function AddMealPanel({ open: controlledOpen, onOpenChange }: AddMealPane
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl h-auto max-h-[85dvh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle>Log a meal</SheetTitle>
+            <SheetTitle>{LL.addMeal.title()}</SheetTitle>
           </SheetHeader>
 
           {parsed ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMounted } from "@/hooks/useMounted";
+import { useI18nContext } from "@/lib/i18n/i18n-react";
 
 interface Props {
   consumed: number;
@@ -22,6 +23,7 @@ export function CalorieSummaryRing({ consumed, goal }: Props) {
   const progress = hasGoal ? Math.min(consumed / goal, 1) : 0;
   const offset = C * (1 - progress);
   const color = overBudget ? "#ef4444" : "#8b5cf6";
+  const { LL } = useI18nContext();
 
   if (!mounted) {
     return (
@@ -84,7 +86,7 @@ export function CalorieSummaryRing({ consumed, goal }: Props) {
           >
             {consumed}
           </span>
-          <span className="text-sm text-slate-400">{hasGoal ? `/ ${goal} kcal` : "kcal"}</span>
+          <span className="text-sm text-slate-400">{hasGoal ? LL.dashboard.calGoal({ goal: goal }) : LL.common.kcal()}</span>
         </div>
       </div>
 
@@ -97,7 +99,7 @@ export function CalorieSummaryRing({ consumed, goal }: Props) {
               : "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-widest"
           }
         >
-          {overBudget ? "Over" : "Remaining"}&nbsp;{overBudget ? consumed - goal : remaining} kcal
+          {overBudget ? LL.dashboard.over() : LL.dashboard.remaining()}&nbsp;{overBudget ? consumed - goal : remaining} {LL.common.kcal()}
         </span>
       )}
     </div>
