@@ -1,4 +1,4 @@
-adding i18n
+we have to refactor the sidebar (the one that appears when clicking on the cog in the header), right now that directly allows the user to modify the goal. we're going to remove that icon from the header and move the goal setup inside the BottomNav, in the User section. 
 
-add i18n with typesafe-i18n, replace ALL labels in .tsx files with labels from the i18n library.
-Make sure we support two languages: English and Italian
+We will delete the GloalSettingSheet entirely and redirect the user to the onboarding flow if he wants to setup his goals/stats.
+The user section must contain a navigation link to the onboaring flow, if possible we should skip the WelcomeStep, since the user is actively requesting to modify his stats/goals. we also have to move the orange dot that appears when profileExists is false to the user icon 
