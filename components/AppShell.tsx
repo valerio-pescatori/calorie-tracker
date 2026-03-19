@@ -6,7 +6,7 @@ import TypesafeI18n from "@/lib/i18n/i18n-react";
 import { loadAllLocales } from "@/lib/i18n/i18n-util.sync";
 import type { Locales } from "@/lib/i18n/i18n-types";
 import { useStore } from "@/lib/store";
-import { AddMealPanel } from "@/components/dashboard/AddMealPanel";
+import { AddMealPanel } from "@/components/dashboard/add-meal";
 import { BottomNav } from "@/components/dashboard/BottomNav";
 
 const NAV_ROUTES = ["/dashboard", "/profile"];
