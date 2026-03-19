@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { useI18nContext } from "@/lib/i18n/i18n-react";
 import type { Locales } from "@/lib/i18n/i18n-types";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 function persistLocale(next: string) {
   localStorage.setItem("locale", next);
@@ -30,9 +31,7 @@ export default function ProfilePage() {
       .then(({ data }) => {
         const user = data.user;
         setEmail(user?.email ?? "");
-        setDisplayName(
-          user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? ""
-        );
+        setDisplayName(user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "");
       });
   }, [hydrateProfile]);
 
@@ -49,8 +48,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="relative min-h-dvh pb-28">
-      <main className="max-w-2xl mx-auto px-4 pt-10 space-y-8">
+    <div className="relative min-h-dvh pb-28 flex flex-col">
+      <main className="max-w-2xl px-4 pt-10 space-y-8 grow flex flex-col">
         {/* Avatar + name */}
         <div className="flex flex-col items-center gap-3 pt-4">
           <div className="relative">
@@ -102,6 +101,19 @@ export default function ProfilePage() {
             ))}
           </div>
         </section>
+
+        {/* Logout button */}
+        <Button
+          variant="destructive"
+          className="w-full py-6 mt-auto"
+          onClick={async () => {
+            const client = createClient();
+            await client.auth.signOut();
+            router.push("/login");
+          }}
+        >
+          {LL.profile.logout()}
+        </Button>
       </main>
     </div>
   );

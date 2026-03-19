@@ -3,6 +3,11 @@
 import { SubmitEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18nContext } from "@/lib/i18n/i18n-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import GoogleIcon from "@/assets/google-icon.svg";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -46,10 +51,8 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                {LL.login.emailLabel()}
-              </label>
-              <input
+              <Label htmlFor="email">{LL.login.emailLabel()}</Label>
+              <Input
                 id="email"
                 type="email"
                 required
@@ -57,22 +60,34 @@ export default function LoginPage() {
                 placeholder={LL.login.emailPlaceholder()}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
                 disabled={status === "loading"}
               />
             </div>
 
             {status === "error" && <p className="text-sm text-destructive">{errorMsg}</p>}
-
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={status === "loading"} className="w-full">
               {status === "loading" ? LL.login.sending() : LL.login.sendLink()}
-            </button>
+            </Button>
           </form>
         )}
+
+        <p className="text-center">{LL.login.or()}</p>
+        <div className="flex">
+          <Button
+            variant="outline"
+            className="size-20 mx-auto p-4 bg-white/10 rounded-xl border border-white/20 hover:bg-white/20 active:bg-white/20 transition-colors"
+            onClick={() =>
+              createClient().auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: `${location.origin}/auth/callback`,
+                },
+              })
+            }
+          >
+            <Image src={GoogleIcon} alt="Google icon" />
+          </Button>
+        </div>
       </div>
     </main>
   );

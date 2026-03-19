@@ -23,6 +23,8 @@ const en = {
 		sendLink: 'Send magic link',
 		sending: 'Sending…',
 		checkInbox: 'Check your inbox — we sent a magic link to',
+		or: "or"
+
 	},
 	common: {
 		kcal: 'kcal',
@@ -163,6 +165,7 @@ const en = {
 		title: 'Profile',
 		updateGoals: 'Update goals & stats',
 		language: 'Language',
+		logout: 'Log out',
 	},
 } satisfies BaseTranslation
 

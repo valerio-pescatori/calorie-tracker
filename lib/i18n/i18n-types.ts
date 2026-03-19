@@ -81,6 +81,10 @@ type RootTranslation = {
 		 * C​h​e​c​k​ ​y​o​u​r​ ​i​n​b​o​x​ ​—​ ​w​e​ ​s​e​n​t​ ​a​ ​m​a​g​i​c​ ​l​i​n​k​ ​t​o
 		 */
 		checkInbox: string
+		/**
+		 * o​r
+		 */
+		or: string
 	}
 	common: {
 		/**
@@ -610,6 +614,10 @@ type RootTranslation = {
 		 * L​a​n​g​u​a​g​e
 		 */
 		language: string
+		/**
+		 * L​o​g​ ​o​u​t
+		 */
+		logout: string
 	}
 }
 
@@ -681,6 +689,10 @@ export type TranslationFunctions = {
 		 * Check your inbox — we sent a magic link to
 		 */
 		checkInbox: () => LocalizedString
+		/**
+		 * or
+		 */
+		or: () => LocalizedString
 	}
 	common: {
 		/**
@@ -1205,6 +1217,10 @@ export type TranslationFunctions = {
 		 * Language
 		 */
 		language: () => LocalizedString
+		/**
+		 * Log out
+		 */
+		logout: () => LocalizedString
 	}
 }
 
